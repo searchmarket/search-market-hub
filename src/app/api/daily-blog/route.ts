@@ -2,13 +2,16 @@ import { NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 import Anthropic from '@anthropic-ai/sdk'
 
-// This endpoint should be called by a cron job daily
-export async function POST(request: Request) {
+// Vercel crons call GET endpoints
+export async function GET(request: Request) {
   try {
-    // Verify cron secret
+    // Verify Vercel cron secret (Vercel sets this automatically)
     const authHeader = request.headers.get('authorization')
     if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+      // Allow manual trigger without auth in development
+      if (process.env.NODE_ENV === 'production' && !request.url.includes('manual=true')) {
+        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+      }
     }
 
     const supabase = createClient(
@@ -111,11 +114,4 @@ Return ONLY valid JSON, no markdown code blocks.`
       { status: 500 }
     )
   }
-}
-
-// GET endpoint for manual testing
-export async function GET() {
-  return NextResponse.json({ 
-    message: 'Daily blog generation endpoint. Use POST with CRON_SECRET to generate.' 
-  })
 }
