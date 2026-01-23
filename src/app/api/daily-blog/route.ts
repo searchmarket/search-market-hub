@@ -47,11 +47,17 @@ Write a comprehensive daily news article covering the latest trends, news, and i
 - Industry regulations and compliance
 - Tips and best practices for recruiters
 
+FORMATTING RULES:
+- NEVER use em dashes (—) anywhere
+- NEVER use hyphens (-) to connect compound words. Write "well known" not "well-known", "full time" not "full-time", "self motivated" not "self-motivated"
+- Add a blank line between paragraphs by using <p style="margin-bottom: 1rem;"> tags
+- Use <h2 style="margin-top: 1.5rem; margin-bottom: 0.75rem;"> for section headers
+
 Format your response as JSON with the following structure:
 {
   "title": "A compelling headline for today's digest",
   "summary": "A 2-3 sentence summary of the key points",
-  "content": "The full article in HTML format with <h2>, <p>, <ul>, <li> tags. Make it informative and actionable for recruiters. Include 4-6 sections.",
+  "content": "The full article in HTML format with styled <h2>, <p>, <ul>, <li> tags. Make it informative and actionable for recruiters. Include 4-6 sections.",
   "topics": ["topic1", "topic2", "topic3"]
 }
 
@@ -67,6 +73,14 @@ Return ONLY valid JSON, no markdown code blocks.`
     try {
       const cleanJson = responseText.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim()
       blogData = JSON.parse(cleanJson)
+      
+      // Remove any em dashes or en dashes that slip through
+      if (blogData.content) {
+        blogData.content = blogData.content.replace(/—/g, ', ').replace(/–/g, ', ')
+      }
+      if (blogData.summary) {
+        blogData.summary = blogData.summary.replace(/—/g, ', ').replace(/–/g, ', ')
+      }
     } catch {
       console.error('Failed to parse blog response:', responseText)
       return NextResponse.json({ error: 'Failed to generate blog content' }, { status: 500 })
