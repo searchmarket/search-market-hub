@@ -24,6 +24,7 @@ interface Recruiter {
 interface BlogPost {
   id: string
   title: string
+  slug: string
   summary: string
   created_at: string
 }
@@ -52,7 +53,7 @@ export default function HubPage() {
   async function fetchLatestBlog() {
     const { data, error } = await supabase
       .from('blog_posts')
-      .select('id, title, summary, created_at')
+      .select('id, title, slug, summary, created_at')
       .order('created_at', { ascending: false })
       .limit(1)
       .single()
@@ -183,7 +184,7 @@ export default function HubPage() {
               </Link>
             </div>
             {latestBlog ? (
-              <Link href={`/blog/${latestBlog.id}`} className="block group">
+              <Link href={`/blog/${latestBlog.slug}`} className="block group">
                 <h3 className="font-medium text-gray-900 group-hover:text-brand-accent transition-colors">
                   {latestBlog.title}
                 </h3>
