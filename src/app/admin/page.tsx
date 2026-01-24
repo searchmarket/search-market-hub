@@ -37,7 +37,7 @@ interface Agency {
   status: string
   is_public: boolean
   owner_id: string
-  owner?: { full_name: string | null; email: string }
+  owner?: { full_name: string | null; email: string } | null
   member_count?: number
 }
 
@@ -45,7 +45,7 @@ interface AgencyMember {
   recruiter_id: string
   role: string
   status: string
-  recruiter: { full_name: string | null; email: string }
+  recruiter: { full_name: string | null; email: string } | null
 }
 
 export default function AdminPage() {
@@ -112,8 +112,14 @@ export default function AdminPage() {
       .order('name')
 
     if (data) {
-      const agenciesWithCount = data.map(a => ({
-        ...a,
+      const agenciesWithCount = data.map((a: any) => ({
+        id: a.id,
+        name: a.name,
+        slug: a.slug,
+        status: a.status,
+        is_public: a.is_public,
+        owner_id: a.owner_id,
+        owner: Array.isArray(a.owner) ? a.owner[0] : a.owner,
         member_count: a.agency_members?.[0]?.count || 0
       }))
       setAgencies(agenciesWithCount)
@@ -161,7 +167,15 @@ export default function AdminPage() {
       .select('recruiter_id, role, status, recruiter:recruiters(full_name, email)')
       .eq('agency_id', agency.id)
 
-    if (data) setAgencyMembers(data as AgencyMember[])
+    if (data) {
+      const members = data.map((m: any) => ({
+        recruiter_id: m.recruiter_id,
+        role: m.role,
+        status: m.status,
+        recruiter: Array.isArray(m.recruiter) ? m.recruiter[0] : m.recruiter
+      }))
+      setAgencyMembers(members)
+    }
   }
 
   async function addMemberToAgency() {
