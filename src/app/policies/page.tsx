@@ -46,7 +46,7 @@ export default function PoliciesPage() {
       icon: FileText,
       color: 'bg-orange-500',
       docs: [
-        { name: 'TEEMA Services Overview', file: 'Teema_Services.pdf' },
+        { name: 'SM Services Overview', file: 'Teema_Services.pdf' },
         { name: 'Contract Services', file: 'contract_services.pdf' },
         { name: 'Subscription Services', file: 'subscription_services.pdf' },
         { name: 'Payroll Services', file: 'payroll_services.pdf' },
@@ -58,10 +58,10 @@ export default function PoliciesPage() {
       icon: Shield,
       color: 'bg-red-500',
       docs: [
-        { name: 'Master Client Agreement (Sample)', file: 'TEEMA_Master_Client_Agreement__TWD_Tech_CAD_ON.pdf' },
-        { name: 'Search Agreement (CAN Sample)', file: 'TEEMA_Search_Agreement__CAN_Sample.pdf' },
-        { name: 'Master Vendor Agreement (Sample)', file: 'TEEMA_Master_Vendor_Agreement__12175959_Canada_Inc___Craig_Ferguson_pdf_encrypted_.pdf' },
-        { name: 'Consultant Schedule A (Sample)', file: 'TEEMA_Consultant_Sch_A_003__Evgeny_Vasilchenko.pdf' },
+        { name: 'SM Master Client Agreement (Sample)', file: 'TEEMA_Master_Client_Agreement__TWD_Tech_CAD_ON.pdf' },
+        { name: 'SM Search Agreement (CAN Sample)', file: 'TEEMA_Search_Agreement__CAN_Sample.pdf' },
+        { name: 'SM Master Vendor Agreement (Sample)', file: 'TEEMA_Master_Vendor_Agreement__12175959_Canada_Inc___Craig_Ferguson_pdf_encrypted_.pdf' },
+        { name: 'SM Consultant Schedule A (Sample)', file: 'TEEMA_Consultant_Sch_A_003__Evgeny_Vasilchenko.pdf' },
         { name: 'Member Assistant Agreement', file: 'member_asitant_agreement.pdf' },
       ]
     },
@@ -72,7 +72,7 @@ export default function PoliciesPage() {
       docs: [
         { name: 'Marketing & Communications', file: 'marketing_and_comunications.pdf' },
         { name: 'New Member Brochure', file: 'New_Member_Brochure_2020.pdf' },
-        { name: 'TEEMA Overview', file: 'Teema_Overview.pdf' },
+        { name: 'SM Overview', file: 'Teema_Overview.pdf' },
       ]
     },
   ]
