@@ -13,7 +13,8 @@ import {
   ArrowRight,
   TrendingUp,
   Building,
-  LogOut
+  LogOut,
+  Trophy
 } from 'lucide-react'
 
 interface Recruiter {
@@ -119,7 +120,7 @@ export default function HubPage() {
       external: false
     },
     {
-      title: 'Team Directory',
+      title: 'Recruiters',
       description: 'View all recruiters and their specializations',
       href: '/recruiters',
       icon: Users,
@@ -127,11 +128,19 @@ export default function HubPage() {
       external: false
     },
     {
-      title: 'Virtual Agencies',
-      description: 'Create or join a virtual agency on the platform',
+      title: 'Agencies',
+      description: 'Create or join an agency on the platform',
       href: '/agencies',
       icon: Building,
       color: 'bg-indigo-500',
+      external: false
+    },
+    {
+      title: 'Leaderboard',
+      description: 'Top performing recruiters and agencies',
+      href: '/leaderboard',
+      icon: Trophy,
+      color: 'bg-yellow-500',
       external: false
     }
   ]
