@@ -28,14 +28,13 @@ export default function AgenciesPage() {
   }, [])
 
   async function fetchAgencies() {
-    // Fetch public agencies with member count
+    // Fetch all agencies with member count
     const { data, error } = await supabase
       .from('agencies')
       .select(`
         id, name, slug, description, logo_url, tagline, is_public, primary_color,
         agency_members(count)
       `)
-      .eq('is_public', true)
       .eq('status', 'active')
       .order('name')
 
@@ -111,7 +110,7 @@ export default function AgenciesPage() {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
           <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4">
             <div className="text-3xl font-bold text-gray-900">{agencies.length}</div>
-            <div className="text-sm text-gray-500">Public Agencies</div>
+            <div className="text-sm text-gray-500">Total Agencies</div>
           </div>
           <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4">
             <div className="text-3xl font-bold text-gray-900">
@@ -132,7 +131,7 @@ export default function AgenciesPage() {
           <div className="text-center py-12">
             <Building className="w-12 h-12 text-gray-300 mx-auto mb-4" />
             <p className="text-gray-500 mb-2">
-              {searchQuery ? `No agencies found matching "${searchQuery}"` : 'No public agencies yet'}
+              {searchQuery ? `No agencies found matching "${searchQuery}"` : 'No agencies yet'}
             </p>
             <Link href="/agencies/create" className="text-brand-accent hover:underline">
               Be the first to create one →
@@ -170,10 +169,17 @@ export default function AgenciesPage() {
                     <h3 className="font-semibold text-gray-900 group-hover:text-brand-accent transition-colors">
                       {agency.name}
                     </h3>
-                    <span className="flex items-center gap-1 text-xs text-gray-400">
-                      <Globe className="w-3 h-3" />
-                      Public
-                    </span>
+                    {agency.is_public ? (
+                      <span className="flex items-center gap-1 text-xs text-green-600 bg-green-50 px-2 py-0.5 rounded-full">
+                        <Globe className="w-3 h-3" />
+                        Public
+                      </span>
+                    ) : (
+                      <span className="flex items-center gap-1 text-xs text-orange-600 bg-orange-50 px-2 py-0.5 rounded-full">
+                        <Lock className="w-3 h-3" />
+                        Private
+                      </span>
+                    )}
                   </div>
                   
                   {agency.tagline && (
