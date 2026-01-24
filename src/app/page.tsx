@@ -16,7 +16,8 @@ import {
   Trophy,
   BarChart3,
   MapPin,
-  ExternalLink
+  ExternalLink,
+  Shield
 } from 'lucide-react'
 
 interface BlogPost {
@@ -31,6 +32,7 @@ export default function HubPage() {
   const [latestBlog, setLatestBlog] = useState<BlogPost | null>(null)
   const [user, setUser] = useState<any>(null)
   const [userCity, setUserCity] = useState<string | null>(null)
+  const [isAdmin, setIsAdmin] = useState(false)
   const supabase = createClient()
 
   useEffect(() => {
@@ -43,15 +45,18 @@ export default function HubPage() {
     setUser(user)
     
     if (user) {
-      // Fetch recruiter profile to get city
+      // Fetch recruiter profile to get city and admin status
       const { data: recruiter } = await supabase
         .from('recruiters')
-        .select('city')
+        .select('city, is_admin')
         .eq('id', user.id)
         .single()
       
       if (recruiter?.city) {
         setUserCity(recruiter.city)
+      }
+      if (recruiter?.is_admin) {
+        setIsAdmin(true)
       }
     }
   }
@@ -169,9 +174,20 @@ export default function HubPage() {
             </div>
             <div className="flex items-center gap-4">
               {user && (
-                <span className="text-white/70 text-sm hidden md:block">
-                  {user.email}
-                </span>
+                <div className="hidden md:block text-right">
+                  <span className="text-white/70 text-sm block">
+                    {user.email}
+                  </span>
+                  {isAdmin && (
+                    <Link 
+                      href="/admin" 
+                      className="text-xs text-red-300 hover:text-red-200 flex items-center gap-1 justify-end"
+                    >
+                      <Shield className="w-3 h-3" />
+                      Admin
+                    </Link>
+                  )}
+                </div>
               )}
               <Link 
                 href="https://ats.search.market"
