@@ -8,7 +8,6 @@ import {
   GraduationCap, 
   Megaphone, 
   FileText, 
-  Newspaper,
   Briefcase,
   ArrowRight,
   TrendingUp,
@@ -110,14 +109,6 @@ export default function HubPage() {
       href: '/policies',
       icon: FileText,
       color: 'bg-green-500',
-      external: false
-    },
-    {
-      title: 'Industry News',
-      description: 'Daily AI-curated recruitment industry news and insights',
-      href: '/blog',
-      icon: Newspaper,
-      color: 'bg-red-500',
       external: false
     },
     {
