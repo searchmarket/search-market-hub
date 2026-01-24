@@ -75,6 +75,7 @@ export default function HubPage() {
   }
 
   const quickLinks = [
+    // Row 1
     {
       title: 'ATS',
       description: 'Applicant Tracking System - Manage jobs, candidates, and clients',
@@ -84,29 +85,22 @@ export default function HubPage() {
       external: true
     },
     {
-      title: 'Recruiter School',
-      description: 'Training materials, best practices, and onboarding resources',
-      href: '/school',
-      icon: GraduationCap,
-      color: 'bg-purple-500',
-      external: false
-    },
-    {
-      title: 'Marketing Tools',
-      description: 'Templates, brand assets, and marketing resources',
-      href: '/marketing',
-      icon: Megaphone,
-      color: 'bg-orange-500',
-      external: false
-    },
-    {
-      title: 'Policies & Procedures',
-      description: 'Company policies, guidelines, and standard procedures',
-      href: '/policies',
+      title: 'Contracts',
+      description: 'Manage contracts, agreements, and documents',
+      href: '/contracts',
       icon: FileText,
-      color: 'bg-green-500',
+      color: 'bg-slate-500',
       external: false
     },
+    {
+      title: 'Reports',
+      description: 'Analytics, metrics, and performance reports',
+      href: '/reports',
+      icon: BarChart3,
+      color: 'bg-cyan-500',
+      external: false
+    },
+    // Row 2
     {
       title: 'Recruiters',
       description: 'View all recruiters and their specializations',
@@ -131,20 +125,29 @@ export default function HubPage() {
       color: 'bg-yellow-500',
       external: false
     },
+    // Row 3
     {
-      title: 'Reports',
-      description: 'Analytics, metrics, and performance reports',
-      href: '/reports',
-      icon: BarChart3,
-      color: 'bg-cyan-500',
+      title: 'Marketing Tools',
+      description: 'Templates, brand assets, and marketing resources',
+      href: '/marketing',
+      icon: Megaphone,
+      color: 'bg-orange-500',
       external: false
     },
     {
-      title: 'Contracts',
-      description: 'Manage contracts, agreements, and documents',
-      href: '/contracts',
+      title: 'Recruiter School',
+      description: 'Training materials, best practices, and onboarding resources',
+      href: '/school',
+      icon: GraduationCap,
+      color: 'bg-purple-500',
+      external: false
+    },
+    {
+      title: 'Policies & Procedures',
+      description: 'Company policies, guidelines, and standard procedures',
+      href: '/policies',
       icon: FileText,
-      color: 'bg-slate-500',
+      color: 'bg-green-500',
       external: false
     }
   ]
