@@ -151,6 +151,14 @@ export default function HubPage() {
       icon: BarChart3,
       color: 'bg-cyan-500',
       external: false
+    },
+    {
+      title: 'Contracts',
+      description: 'Manage contracts, agreements, and documents',
+      href: '/contracts',
+      icon: FileText,
+      color: 'bg-slate-500',
+      external: false
     }
   ]
 
