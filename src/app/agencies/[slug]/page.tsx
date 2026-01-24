@@ -77,7 +77,7 @@ export default function AgencyDetailPage() {
       const { data: recruiter } = await supabase
         .from('recruiters')
         .select('id')
-        .eq('user_id', user.id)
+        .eq('id', user.id)
         .single()
       recruiterId = recruiter?.id
       setCurrentRecruiterId(recruiterId)

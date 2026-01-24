@@ -45,7 +45,7 @@ export default function SignupPage() {
       const { error: profileError } = await supabase
         .from('recruiters')
         .insert([{
-          user_id: authData.user.id,
+          id: authData.user.id,
           email: email,
           full_name: fullName,
         }])

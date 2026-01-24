@@ -42,7 +42,7 @@ export default function MyAgenciesPage() {
     const { data: recruiter } = await supabase
       .from('recruiters')
       .select('id')
-      .eq('user_id', user.id)
+      .eq('id', user.id)
       .single()
 
     if (!recruiter) {
