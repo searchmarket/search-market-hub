@@ -14,15 +14,10 @@ import {
   Building,
   LogOut,
   Trophy,
-  BarChart3
+  BarChart3,
+  MapPin,
+  ExternalLink
 } from 'lucide-react'
-
-interface Recruiter {
-  id: string
-  full_name: string | null
-  email: string
-  specializations: string[] | null
-}
 
 interface BlogPost {
   id: string
@@ -33,13 +28,12 @@ interface BlogPost {
 }
 
 export default function HubPage() {
-  const [recruiters, setRecruiters] = useState<Recruiter[]>([])
   const [latestBlog, setLatestBlog] = useState<BlogPost | null>(null)
   const [user, setUser] = useState<any>(null)
+  const [userCity, setUserCity] = useState<string | null>(null)
   const supabase = createClient()
 
   useEffect(() => {
-    fetchRecruiters()
     fetchLatestBlog()
     fetchUser()
   }, [])
@@ -47,22 +41,24 @@ export default function HubPage() {
   async function fetchUser() {
     const { data: { user } } = await supabase.auth.getUser()
     setUser(user)
+    
+    if (user) {
+      // Fetch recruiter profile to get city
+      const { data: recruiter } = await supabase
+        .from('recruiters')
+        .select('city')
+        .eq('id', user.id)
+        .single()
+      
+      if (recruiter?.city) {
+        setUserCity(recruiter.city)
+      }
+    }
   }
 
   async function handleLogout() {
     await supabase.auth.signOut()
     window.location.href = '/auth/login'
-  }
-
-  async function fetchRecruiters() {
-    const { data, error } = await supabase
-      .from('recruiters')
-      .select('id, full_name, email, specializations')
-      .limit(5)
-
-    if (!error && data) {
-      setRecruiters(data)
-    }
   }
 
   async function fetchLatestBlog() {
@@ -260,43 +256,49 @@ export default function HubPage() {
             )}
           </section>
 
-          {/* Team Preview */}
+          {/* Local Jobs News */}
           <section className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
-                <Users className="w-5 h-5 text-teal-500" />
-                Team Members
+                <MapPin className="w-5 h-5 text-blue-500" />
+                Local Jobs News
               </h2>
-              <Link href="/recruiters" className="text-sm text-brand-accent hover:underline">
-                View all →
-              </Link>
             </div>
-            {recruiters.length > 0 ? (
-              <div className="space-y-3">
-                {recruiters.map((recruiter) => (
-                  <Link 
-                    key={recruiter.id} 
-                    href={`/recruiters/${recruiter.id}`}
-                    className="flex items-center gap-3 p-2 rounded-lg hover:bg-gray-50 transition-colors"
-                  >
-                    <div className="w-10 h-10 bg-gray-200 rounded-full flex items-center justify-center text-gray-600 font-medium">
-                      {recruiter.full_name?.charAt(0) || recruiter.email.charAt(0).toUpperCase()}
-                    </div>
-                    <div>
-                      <div className="font-medium text-gray-900">
-                        {recruiter.full_name || recruiter.email}
-                      </div>
-                      {recruiter.specializations && recruiter.specializations.length > 0 && (
-                        <div className="text-xs text-gray-500">
-                          {recruiter.specializations.slice(0, 2).join(', ')}
-                        </div>
-                      )}
-                    </div>
-                  </Link>
-                ))}
+            {userCity ? (
+              <div>
+                <p className="text-sm text-gray-600 mb-4">
+                  Latest job market news for <span className="font-semibold">{userCity}</span>
+                </p>
+                <a
+                  href={(() => {
+                    const yesterday = new Date()
+                    yesterday.setDate(yesterday.getDate() - 1)
+                    const dateStr = yesterday.toISOString().split('T')[0]
+                    return `https://www.google.com/search?q=${encodeURIComponent(userCity + ' jobs news after:' + dateStr)}`
+                  })()}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-2 px-4 py-2.5 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
+                >
+                  <ExternalLink className="w-4 h-4" />
+                  Search {userCity} Jobs News
+                </a>
+                <p className="text-xs text-gray-400 mt-3">
+                  Opens Google search for recent job news in your area
+                </p>
               </div>
             ) : (
-              <p className="text-gray-500 text-sm">No team members found.</p>
+              <div>
+                <p className="text-gray-500 text-sm mb-3">
+                  Add your city in your profile settings to see local job news.
+                </p>
+                <Link 
+                  href="https://ats.search.market/dashboard/settings"
+                  className="text-brand-accent hover:underline text-sm"
+                >
+                  Update your profile →
+                </Link>
+              </div>
             )}
           </section>
         </div>
