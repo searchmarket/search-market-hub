@@ -14,7 +14,8 @@ import {
   TrendingUp,
   Building,
   LogOut,
-  Trophy
+  Trophy,
+  BarChart3
 } from 'lucide-react'
 
 interface Recruiter {
@@ -141,6 +142,14 @@ export default function HubPage() {
       href: '/leaderboard',
       icon: Trophy,
       color: 'bg-yellow-500',
+      external: false
+    },
+    {
+      title: 'Reports',
+      description: 'Analytics, metrics, and performance reports',
+      href: '/reports',
+      icon: BarChart3,
+      color: 'bg-cyan-500',
       external: false
     }
   ]
