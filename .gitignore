@@ -3,4 +3,4 @@ node_modules
 .next
 .env
 .env.local
-"@ | Out-File -FilePath .gitignore -Encoding utf8
+"@ | Out-File -FilePath .gitignore -Encoding ascii
