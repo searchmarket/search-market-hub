@@ -715,9 +715,9 @@ export default function AdminPage() {
                         <div className="text-sm text-gray-500 flex items-center gap-2">
                           {agency.slug}
                           {agency.is_public ? (
-                            <Eye className="w-3 h-3 text-green-500" title="Public" />
+                            <Eye className="w-3 h-3 text-green-500" />
                           ) : (
-                            <EyeOff className="w-3 h-3 text-gray-400" title="Private" />
+                            <EyeOff className="w-3 h-3 text-gray-400" />
                           )}
                         </div>
                       </div>
