@@ -12,7 +12,8 @@ import {
   Briefcase,
   ArrowRight,
   TrendingUp,
-  Building
+  Building,
+  LogOut
 } from 'lucide-react'
 
 interface Recruiter {
@@ -33,12 +34,24 @@ interface BlogPost {
 export default function HubPage() {
   const [recruiters, setRecruiters] = useState<Recruiter[]>([])
   const [latestBlog, setLatestBlog] = useState<BlogPost | null>(null)
+  const [user, setUser] = useState<any>(null)
   const supabase = createClient()
 
   useEffect(() => {
     fetchRecruiters()
     fetchLatestBlog()
+    fetchUser()
   }, [])
+
+  async function fetchUser() {
+    const { data: { user } } = await supabase.auth.getUser()
+    setUser(user)
+  }
+
+  async function handleLogout() {
+    await supabase.auth.signOut()
+    window.location.href = '/auth/login'
+  }
 
   async function fetchRecruiters() {
     const { data, error } = await supabase
@@ -138,13 +151,36 @@ export default function HubPage() {
                 <p className="text-white/70 text-sm">Your central workspace</p>
               </div>
             </div>
-            <Link 
-              href="https://ats.search.market"
-              className="flex items-center gap-2 px-4 py-2 bg-brand-green rounded-lg hover:bg-green-600 transition-colors"
-            >
-              <Briefcase className="w-4 h-4" />
-              Open ATS
-            </Link>
+            <div className="flex items-center gap-4">
+              {user && (
+                <span className="text-white/70 text-sm hidden md:block">
+                  {user.email}
+                </span>
+              )}
+              <Link 
+                href="https://ats.search.market"
+                className="flex items-center gap-2 px-4 py-2 bg-brand-green rounded-lg hover:bg-green-600 transition-colors"
+              >
+                <Briefcase className="w-4 h-4" />
+                Open ATS
+              </Link>
+              {user ? (
+                <button
+                  onClick={handleLogout}
+                  className="flex items-center gap-2 px-4 py-2 bg-white/10 rounded-lg hover:bg-white/20 transition-colors"
+                >
+                  <LogOut className="w-4 h-4" />
+                  <span className="hidden md:inline">Logout</span>
+                </button>
+              ) : (
+                <Link
+                  href="/auth/login"
+                  className="flex items-center gap-2 px-4 py-2 bg-white/10 rounded-lg hover:bg-white/20 transition-colors"
+                >
+                  Login
+                </Link>
+              )}
+            </div>
           </div>
         </div>
       </header>
