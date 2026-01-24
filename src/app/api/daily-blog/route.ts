@@ -2,6 +2,8 @@ import { NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 import Anthropic from '@anthropic-ai/sdk'
 
+export const dynamic = 'force-dynamic'
+
 // Vercel crons call GET endpoints
 export async function GET(request: Request) {
   try {
