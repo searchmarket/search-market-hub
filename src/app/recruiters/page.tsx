@@ -12,6 +12,7 @@ interface Recruiter {
   specializations: string[] | null
   bio: string | null
   avatar_url: string | null
+  is_available: boolean
 }
 
 export default function RecruitersPage() {
@@ -27,12 +28,11 @@ export default function RecruitersPage() {
   async function fetchRecruiters() {
     const { data, error } = await supabase
       .from('recruiters')
-      .select('id, full_name, email, specializations, bio, avatar_url')
-      .eq('is_visible', true)
+      .select('id, full_name, email, specializations, bio, avatar_url, is_available')
       .order('full_name')
 
     if (!error && data) {
-      setRecruiters(data)
+      setRecruiters(data.map(r => ({ ...r, is_available: r.is_available !== false })))
     }
     setLoading(false)
   }
@@ -82,10 +82,16 @@ export default function RecruitersPage() {
         </div>
 
         {/* Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
           <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4">
             <div className="text-3xl font-bold text-gray-900">{recruiters.length}</div>
             <div className="text-sm text-gray-500">Total Recruiters</div>
+          </div>
+          <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4">
+            <div className="text-3xl font-bold text-green-600">
+              {recruiters.filter(r => r.is_available).length}
+            </div>
+            <div className="text-sm text-gray-500">Available</div>
           </div>
           <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4">
             <div className="text-3xl font-bold text-gray-900">
@@ -129,9 +135,18 @@ export default function RecruitersPage() {
                     )}
                   </div>
                   <div className="flex-1 min-w-0">
-                    <h3 className="font-semibold text-gray-900 group-hover:text-brand-accent transition-colors truncate">
-                      {recruiter.full_name || recruiter.email.split('@')[0]}
-                    </h3>
+                    <div className="flex items-center gap-2">
+                      <h3 className="font-semibold text-gray-900 group-hover:text-brand-accent transition-colors truncate">
+                        {recruiter.full_name || recruiter.email.split('@')[0]}
+                      </h3>
+                      <span className={`px-2 py-0.5 text-xs rounded-full font-medium flex-shrink-0 ${
+                        recruiter.is_available 
+                          ? 'bg-green-100 text-green-700' 
+                          : 'bg-gray-100 text-gray-500'
+                      }`}>
+                        {recruiter.is_available ? 'Available' : 'Unavailable'}
+                      </span>
+                    </div>
                     <div className="flex items-center gap-1 text-sm text-gray-500 mt-1">
                       <Mail className="w-3 h-3" />
                       <span className="truncate">{recruiter.email}</span>
