@@ -36,16 +36,30 @@ export default function CreateAgencyPage() {
       }
 
       // Get recruiter record
-      const { data: recruiter } = await supabase
+      let { data: recruiter } = await supabase
         .from('recruiters')
         .select('id')
         .eq('user_id', user.id)
         .single()
 
+      // Auto-create recruiter profile if not found
       if (!recruiter) {
-        alert('Recruiter profile not found')
-        setLoading(false)
-        return
+        const { data: newRecruiter, error: createError } = await supabase
+          .from('recruiters')
+          .insert([{
+            user_id: user.id,
+            email: user.email,
+            full_name: user.user_metadata?.full_name || null
+          }])
+          .select('id')
+          .single()
+
+        if (createError) {
+          alert('Error creating recruiter profile: ' + createError.message)
+          setLoading(false)
+          return
+        }
+        recruiter = newRecruiter
       }
 
       // Generate slug from name
