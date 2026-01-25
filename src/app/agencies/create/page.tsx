@@ -4,7 +4,7 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase'
-import { ArrowLeft, Building, Globe, Lock, Loader2 } from 'lucide-react'
+import { ArrowLeft, Building, Globe, Lock, Loader2, UserPlus } from 'lucide-react'
 
 export default function CreateAgencyPage() {
   const router = useRouter()
@@ -15,6 +15,7 @@ export default function CreateAgencyPage() {
     tagline: '',
     description: '',
     is_public: true,
+    is_accepting_members: true,
     website: '',
     email: '',
     phone: '',
@@ -78,6 +79,7 @@ export default function CreateAgencyPage() {
           tagline: formData.tagline || null,
           description: formData.description || null,
           is_public: formData.is_public,
+          is_accepting_members: formData.is_accepting_members,
           website: formData.website || null,
           email: formData.email || null,
           phone: formData.phone || null,
@@ -234,6 +236,29 @@ export default function CreateAgencyPage() {
                 </div>
               </label>
             </div>
+          </div>
+
+          {/* Accepting Members */}
+          <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+            <h2 className="text-lg font-semibold text-gray-900 mb-6">Membership</h2>
+            
+            <label className="flex items-start gap-4 p-4 border border-gray-200 rounded-lg cursor-pointer hover:bg-gray-50 transition-colors">
+              <input
+                type="checkbox"
+                checked={formData.is_accepting_members}
+                onChange={(e) => setFormData({ ...formData, is_accepting_members: e.target.checked })}
+                className="mt-1 w-5 h-5 rounded border-gray-300 text-brand-accent focus:ring-brand-accent"
+              />
+              <div className="flex-1">
+                <div className="flex items-center gap-2 font-medium text-gray-900">
+                  <UserPlus className="w-4 h-4 text-green-500" />
+                  Accepting New Members
+                </div>
+                <p className="text-sm text-gray-500 mt-1">
+                  Allow other recruiters to request to join your agency. You'll be able to review and approve requests.
+                </p>
+              </div>
+            </label>
           </div>
 
           {/* Contact Info */}

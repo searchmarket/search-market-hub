@@ -17,6 +17,7 @@ interface Agency {
   logo_url: string | null
   tagline: string | null
   is_public: boolean
+  is_accepting_members: boolean
   website: string | null
   email: string | null
   phone: string | null
@@ -73,6 +74,7 @@ export default function ManageAgencyPage() {
     tagline: '',
     description: '',
     is_public: true,
+    is_accepting_members: true,
     website: '',
     email: '',
     phone: '',
@@ -124,6 +126,7 @@ export default function ManageAgencyPage() {
       tagline: agencyData.tagline || '',
       description: agencyData.description || '',
       is_public: agencyData.is_public,
+      is_accepting_members: agencyData.is_accepting_members || false,
       website: agencyData.website || '',
       email: agencyData.email || '',
       phone: agencyData.phone || '',
@@ -293,6 +296,7 @@ export default function ManageAgencyPage() {
         tagline: settingsForm.tagline || null,
         description: settingsForm.description || null,
         is_public: settingsForm.is_public,
+        is_accepting_members: settingsForm.is_accepting_members,
         website: settingsForm.website || null,
         email: settingsForm.email || null,
         phone: settingsForm.phone || null,
@@ -612,6 +616,27 @@ export default function ManageAgencyPage() {
                       Private
                     </label>
                   </div>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Membership</label>
+                  <label className="flex items-center gap-3 p-4 border border-gray-200 rounded-lg cursor-pointer hover:bg-gray-50">
+                    <input
+                      type="checkbox"
+                      checked={settingsForm.is_accepting_members}
+                      onChange={(e) => setSettingsForm({ ...settingsForm, is_accepting_members: e.target.checked })}
+                      className="w-5 h-5 rounded border-gray-300 text-brand-accent focus:ring-brand-accent"
+                    />
+                    <div>
+                      <div className="flex items-center gap-2 font-medium text-gray-900">
+                        <UserPlus className="w-4 h-4 text-green-500" />
+                        Accepting New Members
+                      </div>
+                      <p className="text-sm text-gray-500">
+                        Allow recruiters to request to join your agency
+                      </p>
+                    </div>
+                  </label>
                 </div>
 
                 <div className="grid grid-cols-2 gap-4">
