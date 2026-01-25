@@ -605,12 +605,15 @@ export default function ManageAgencyPage() {
                 <div className="space-y-3">
                   {members.map((member) => (
                     <div key={member.id} className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
-                      <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center text-gray-600 font-medium">
+                      <Link 
+                        href={`/recruiters/${member.recruiter_id}`}
+                        className="flex items-center gap-3 hover:opacity-80 transition-opacity"
+                      >
+                        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-teal-400 to-teal-600 flex items-center justify-center text-white font-medium">
                           {member.recruiter?.full_name?.charAt(0) || member.recruiter?.email.charAt(0).toUpperCase()}
                         </div>
                         <div>
-                          <div className="font-medium text-gray-900">
+                          <div className="font-medium text-gray-900 hover:text-brand-accent">
                             {member.recruiter?.full_name || member.recruiter?.email}
                           </div>
                           <div className="flex items-center gap-2 text-sm">
@@ -623,7 +626,7 @@ export default function ManageAgencyPage() {
                             </span>
                           </div>
                         </div>
-                      </div>
+                      </Link>
                       <div className="flex items-center gap-3">
                         <select
                           value={member.team_id || ''}
