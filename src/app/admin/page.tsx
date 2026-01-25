@@ -32,6 +32,7 @@ interface Recruiter {
   bio: string | null
   linkedin_url: string | null
   force_password_change: boolean
+  specializations: string[] | null
 }
 
 interface Agency {
@@ -56,6 +57,47 @@ interface AgencyMember {
   status: string
   recruiter: { full_name: string | null; email: string } | null
 }
+
+const SPECIALIZATIONS = [
+  'Accounting & Finance',
+  'Administrative & Clerical',
+  'Aerospace & Defense',
+  'Agriculture',
+  'Architecture & Design',
+  'Automotive',
+  'Banking & Financial Services',
+  'Biotechnology',
+  'Construction',
+  'Consulting',
+  'Customer Service',
+  'Education',
+  'Engineering',
+  'Entertainment & Media',
+  'Environmental',
+  'Executive Search',
+  'Food & Beverage',
+  'Government',
+  'Healthcare & Medical',
+  'Hospitality & Tourism',
+  'Human Resources',
+  'Information Technology',
+  'Insurance',
+  'Legal',
+  'Life Sciences',
+  'Logistics & Supply Chain',
+  'Manufacturing',
+  'Marketing & Advertising',
+  'Mining & Resources',
+  'Non-Profit',
+  'Oil & Gas',
+  'Pharmaceutical',
+  'Real Estate',
+  'Retail',
+  'Sales',
+  'Telecommunications',
+  'Transportation',
+  'Utilities & Energy'
+]
 
 const usStates = [
   'Alabama', 'Alaska', 'Arizona', 'Arkansas', 'California', 'Colorado', 'Connecticut', 'Delaware',
@@ -102,7 +144,8 @@ export default function AdminPage() {
     bio: '',
     linkedin_url: '',
     is_admin: false,
-    is_available: true
+    is_available: true,
+    specializations: [] as string[]
   })
   
   const [agencyForm, setAgencyForm] = useState({
@@ -227,7 +270,8 @@ export default function AdminPage() {
         bio: recruiterForm.bio || null,
         linkedin_url: recruiterForm.linkedin_url || null,
         is_admin: recruiterForm.is_admin,
-        is_available: recruiterForm.is_available
+        is_available: recruiterForm.is_available,
+        specializations: recruiterForm.specializations.length > 0 ? recruiterForm.specializations : null
       })
     })
     
@@ -457,7 +501,8 @@ export default function AdminPage() {
       bio: '',
       linkedin_url: '',
       is_admin: false,
-      is_available: true
+      is_available: true,
+      specializations: []
     })
   }
 
@@ -487,7 +532,8 @@ export default function AdminPage() {
       bio: recruiter.bio || '',
       linkedin_url: recruiter.linkedin_url || '',
       is_admin: recruiter.is_admin,
-      is_available: recruiter.is_available
+      is_available: recruiter.is_available,
+      specializations: recruiter.specializations || []
     })
     setShowRecruiterModal(true)
   }
@@ -1028,6 +1074,55 @@ export default function AdminPage() {
                     className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-accent"
                     placeholder="Brief description..."
                   />
+                </div>
+
+                {/* Specializations */}
+                <div className="col-span-2">
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Specializations <span className="text-gray-400 font-normal">(up to 3, first is primary)</span>
+                  </label>
+                  <div className="space-y-2">
+                    {[0, 1, 2].map((index) => (
+                      <div key={index} className="flex items-center gap-2">
+                        <span className="text-xs text-gray-400 w-4">{index + 1}.</span>
+                        <select
+                          value={recruiterForm.specializations[index] || ''}
+                          onChange={(e) => {
+                            const newSpecs = [...recruiterForm.specializations]
+                            if (e.target.value) {
+                              newSpecs[index] = e.target.value
+                            } else {
+                              newSpecs.splice(index, 1)
+                            }
+                            const uniqueSpecs = Array.from(new Set(newSpecs.filter(Boolean)))
+                            setRecruiterForm({ ...recruiterForm, specializations: uniqueSpecs })
+                          }}
+                          className="flex-1 px-3 py-1.5 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-brand-accent text-sm"
+                        >
+                          <option value="">
+                            {index === 0 ? 'Select primary specialization...' : 'Select specialization...'}
+                          </option>
+                          {SPECIALIZATIONS.filter(
+                            s => !recruiterForm.specializations.includes(s) || recruiterForm.specializations[index] === s
+                          ).map(spec => (
+                            <option key={spec} value={spec}>{spec}</option>
+                          ))}
+                        </select>
+                        {recruiterForm.specializations[index] && (
+                          <button
+                            type="button"
+                            onClick={() => {
+                              const newSpecs = recruiterForm.specializations.filter((_, i) => i !== index)
+                              setRecruiterForm({ ...recruiterForm, specializations: newSpecs })
+                            }}
+                            className="p-1 text-gray-400 hover:text-red-500"
+                          >
+                            <X className="w-4 h-4" />
+                          </button>
+                        )}
+                      </div>
+                    ))}
+                  </div>
                 </div>
                 
                 <div className="col-span-2 flex items-center gap-6">

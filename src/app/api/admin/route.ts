@@ -19,7 +19,7 @@ export async function POST(request: NextRequest) {
     const { action } = body
 
     if (action === 'create_recruiter') {
-      const { email, full_name, phone, city, state_province, country, is_admin } = body
+      const { email, full_name, phone, city, state_province, country, is_admin, specializations } = body
 
       // Create auth user with default password
       const { data: authData, error: authError } = await supabaseAdmin.auth.admin.createUser({
@@ -45,7 +45,8 @@ export async function POST(request: NextRequest) {
           country: country || null,
           is_admin: is_admin || false,
           is_available: true,
-          force_password_change: true
+          force_password_change: true,
+          specializations: specializations && specializations.length > 0 ? specializations : null
         })
 
       if (profileError) {
@@ -81,7 +82,7 @@ export async function POST(request: NextRequest) {
     }
 
     if (action === 'update_recruiter') {
-      const { recruiter_id, full_name, phone, city, state_province, country, bio, linkedin_url, is_admin, is_available } = body
+      const { recruiter_id, full_name, phone, city, state_province, country, bio, linkedin_url, is_admin, is_available, specializations } = body
       
       const { error } = await supabaseAdmin
         .from('recruiters')
@@ -94,7 +95,8 @@ export async function POST(request: NextRequest) {
           bio,
           linkedin_url,
           is_admin,
-          is_available
+          is_available,
+          specializations
         })
         .eq('id', recruiter_id)
 
