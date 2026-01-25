@@ -296,13 +296,17 @@ export default function AgencyDetailPage() {
               ) : (
                 <div className="space-y-3">
                   {members.map((member) => (
-                    <div key={member.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                    <Link 
+                      key={member.id} 
+                      href={`/recruiters/${member.recruiter?.id}`}
+                      className="flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors cursor-pointer"
+                    >
                       <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center text-gray-600 font-medium">
+                        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-teal-400 to-teal-600 flex items-center justify-center text-white font-medium">
                           {member.recruiter?.full_name?.charAt(0) || member.recruiter?.email.charAt(0).toUpperCase()}
                         </div>
                         <div>
-                          <div className="font-medium text-gray-900">
+                          <div className="font-medium text-gray-900 hover:text-brand-accent">
                             {member.recruiter?.full_name || member.recruiter?.email}
                           </div>
                           <div className="flex items-center gap-2 text-xs text-gray-500">
@@ -328,7 +332,7 @@ export default function AgencyDetailPage() {
                           ))}
                         </div>
                       )}
-                    </div>
+                    </Link>
                   ))}
                 </div>
               )}
