@@ -5,6 +5,25 @@ import Link from 'next/link'
 import { createClient } from '@/lib/supabase'
 import { ArrowLeft, Users, Search, MapPin } from 'lucide-react'
 
+const STATE_ABBREVIATIONS: Record<string, string> = {
+  // US States
+  'Alabama': 'AL', 'Alaska': 'AK', 'Arizona': 'AZ', 'Arkansas': 'AR', 'California': 'CA',
+  'Colorado': 'CO', 'Connecticut': 'CT', 'Delaware': 'DE', 'Florida': 'FL', 'Georgia': 'GA',
+  'Hawaii': 'HI', 'Idaho': 'ID', 'Illinois': 'IL', 'Indiana': 'IN', 'Iowa': 'IA',
+  'Kansas': 'KS', 'Kentucky': 'KY', 'Louisiana': 'LA', 'Maine': 'ME', 'Maryland': 'MD',
+  'Massachusetts': 'MA', 'Michigan': 'MI', 'Minnesota': 'MN', 'Mississippi': 'MS', 'Missouri': 'MO',
+  'Montana': 'MT', 'Nebraska': 'NE', 'Nevada': 'NV', 'New Hampshire': 'NH', 'New Jersey': 'NJ',
+  'New Mexico': 'NM', 'New York': 'NY', 'North Carolina': 'NC', 'North Dakota': 'ND', 'Ohio': 'OH',
+  'Oklahoma': 'OK', 'Oregon': 'OR', 'Pennsylvania': 'PA', 'Rhode Island': 'RI', 'South Carolina': 'SC',
+  'South Dakota': 'SD', 'Tennessee': 'TN', 'Texas': 'TX', 'Utah': 'UT', 'Vermont': 'VT',
+  'Virginia': 'VA', 'Washington': 'WA', 'West Virginia': 'WV', 'Wisconsin': 'WI', 'Wyoming': 'WY',
+  // Canadian Provinces
+  'Alberta': 'AB', 'British Columbia': 'BC', 'Manitoba': 'MB', 'New Brunswick': 'NB',
+  'Newfoundland and Labrador': 'NL', 'Northwest Territories': 'NT', 'Nova Scotia': 'NS',
+  'Nunavut': 'NU', 'Ontario': 'ON', 'Prince Edward Island': 'PE', 'Quebec': 'QC',
+  'Saskatchewan': 'SK', 'Yukon': 'YT'
+}
+
 interface Recruiter {
   id: string
   full_name: string | null
@@ -61,11 +80,12 @@ export default function RecruitersPage() {
   const canadaCount = recruiters.filter(r => r.country === 'Canada').length
 
   function formatLocation(recruiter: Recruiter): string | null {
-    if (recruiter.city && recruiter.state_province) {
-      return `${recruiter.city}, ${recruiter.state_province}`
+    const stateAbbr = recruiter.state_province ? (STATE_ABBREVIATIONS[recruiter.state_province] || recruiter.state_province) : null
+    if (recruiter.city && stateAbbr) {
+      return `${recruiter.city}, ${stateAbbr}`
     }
     if (recruiter.city) return recruiter.city
-    if (recruiter.state_province) return recruiter.state_province
+    if (stateAbbr) return stateAbbr
     return null
   }
 
