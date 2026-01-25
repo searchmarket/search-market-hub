@@ -41,6 +41,7 @@ interface Agency {
   slug: string
   status: string
   is_public: boolean
+  is_accepting_members: boolean
   owner_id: string
   description: string | null
   website: string | null
@@ -55,6 +56,16 @@ interface AgencyMember {
   recruiter_id: string
   role: string
   status: string
+  recruiter: { full_name: string | null; email: string } | null
+}
+
+interface AgencyApplication {
+  id: string
+  agency_id: string
+  recruiter_id: string
+  status: string
+  message: string | null
+  created_at: string
   recruiter: { full_name: string | null; email: string } | null
 }
 
@@ -154,11 +165,14 @@ export default function AdminPage() {
     description: '',
     owner_id: '',
     is_public: false,
+    is_accepting_members: false,
     website: '',
     email: '',
     phone: '',
     tagline: ''
   })
+
+  const [agencyApplications, setAgencyApplications] = useState<AgencyApplication[]>([])
   
   const supabase = createClient()
 
@@ -397,13 +411,15 @@ export default function AdminPage() {
 
   async function loadAgencyMembers(agency: Agency) {
     setSelectedAgency(agency)
-    const { data } = await supabase
+    
+    // Load members
+    const { data: membersData } = await supabase
       .from('agency_members')
       .select('recruiter_id, role, status, recruiter:recruiters(full_name, email)')
       .eq('agency_id', agency.id)
 
-    if (data) {
-      const members = data.map((m: any) => ({
+    if (membersData) {
+      const members = membersData.map((m: any) => ({
         recruiter_id: m.recruiter_id,
         role: m.role,
         status: m.status,
@@ -411,6 +427,70 @@ export default function AdminPage() {
       }))
       setAgencyMembers(members)
     }
+
+    // Load applications
+    const { data: applicationsData } = await supabase
+      .from('agency_applications')
+      .select('id, agency_id, recruiter_id, status, message, created_at, recruiter:recruiters(full_name, email)')
+      .eq('agency_id', agency.id)
+      .eq('status', 'pending')
+      .order('created_at', { ascending: false })
+
+    if (applicationsData) {
+      const applications = applicationsData.map((a: any) => ({
+        ...a,
+        recruiter: Array.isArray(a.recruiter) ? a.recruiter[0] : a.recruiter
+      }))
+      setAgencyApplications(applications)
+    } else {
+      setAgencyApplications([])
+    }
+  }
+
+  async function approveApplication(application: AgencyApplication) {
+    if (!selectedAgency) return
+    setSaving(true)
+
+    // Add as member
+    const { error: memberError } = await supabase
+      .from('agency_members')
+      .insert({
+        agency_id: selectedAgency.id,
+        recruiter_id: application.recruiter_id,
+        role: 'member',
+        status: 'active'
+      })
+
+    if (memberError) {
+      alert('Error adding member: ' + memberError.message)
+      setSaving(false)
+      return
+    }
+
+    // Update application status
+    await supabase
+      .from('agency_applications')
+      .update({ status: 'approved' })
+      .eq('id', application.id)
+
+    // Refresh data
+    loadAgencyMembers(selectedAgency)
+    setSaving(false)
+  }
+
+  async function rejectApplication(application: AgencyApplication) {
+    if (!selectedAgency) return
+    if (!confirm('Reject this application?')) return
+    
+    setSaving(true)
+
+    await supabase
+      .from('agency_applications')
+      .update({ status: 'rejected' })
+      .eq('id', application.id)
+
+    setAgencyApplications(agencyApplications.filter(a => a.id !== application.id))
+    setSaving(false)
   }
 
   async function addMemberToAgency() {
@@ -513,6 +593,7 @@ export default function AdminPage() {
       description: '',
       owner_id: '',
       is_public: false,
+      is_accepting_members: false,
       website: '',
       email: '',
       phone: '',
@@ -765,6 +846,9 @@ export default function AdminPage() {
                           ) : (
                             <EyeOff className="w-3 h-3 text-gray-400" />
                           )}
+                          {agency.is_accepting_members && (
+                            <span className="text-xs text-green-600 bg-green-50 px-1.5 py-0.5 rounded">Recruiting</span>
+                          )}
                         </div>
                       </div>
                     </td>
@@ -836,19 +920,80 @@ export default function AdminPage() {
                     Owner: {selectedAgency.owner?.full_name || selectedAgency.owner?.email}
                   </p>
                 </div>
-                <button
-                  onClick={() => toggleAgencyStatus(selectedAgency.id, selectedAgency.status)}
-                  disabled={saving}
-                  className={`px-4 py-2 rounded-lg text-sm font-medium ${
-                    selectedAgency.status === 'active'
-                      ? 'bg-red-100 text-red-700 hover:bg-red-200'
-                      : 'bg-green-100 text-green-700 hover:bg-green-200'
-                  }`}
-                >
-                  {selectedAgency.status === 'active' ? 'Disable Agency' : 'Enable Agency'}
-                </button>
+                <div className="flex items-center gap-3">
+                  <button
+                    onClick={async () => {
+                      const newValue = !selectedAgency.is_accepting_members
+                      await supabase.from('agencies').update({ is_accepting_members: newValue }).eq('id', selectedAgency.id)
+                      setSelectedAgency({ ...selectedAgency, is_accepting_members: newValue })
+                      setAgencies(agencies.map(a => a.id === selectedAgency.id ? { ...a, is_accepting_members: newValue } : a))
+                    }}
+                    disabled={saving}
+                    className={`px-4 py-2 rounded-lg text-sm font-medium ${
+                      selectedAgency.is_accepting_members
+                        ? 'bg-green-100 text-green-700 hover:bg-green-200'
+                        : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                    }`}
+                  >
+                    {selectedAgency.is_accepting_members ? 'Accepting Members' : 'Not Accepting'}
+                  </button>
+                  <button
+                    onClick={() => toggleAgencyStatus(selectedAgency.id, selectedAgency.status)}
+                    disabled={saving}
+                    className={`px-4 py-2 rounded-lg text-sm font-medium ${
+                      selectedAgency.status === 'active'
+                        ? 'bg-red-100 text-red-700 hover:bg-red-200'
+                        : 'bg-green-100 text-green-700 hover:bg-green-200'
+                    }`}
+                  >
+                    {selectedAgency.status === 'active' ? 'Disable Agency' : 'Enable Agency'}
+                  </button>
+                </div>
               </div>
             </div>
+
+            {/* Pending Applications */}
+            {agencyApplications.length > 0 && (
+              <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden mb-6">
+                <div className="p-4 border-b border-gray-100 bg-yellow-50">
+                  <h3 className="font-semibold text-gray-900">Pending Applications ({agencyApplications.length})</h3>
+                </div>
+                <div className="divide-y divide-gray-100">
+                  {agencyApplications.map((application) => (
+                    <div key={application.id} className="p-4 flex items-center justify-between">
+                      <div>
+                        <div className="font-medium text-gray-900">
+                          {application.recruiter?.full_name || 'No name'}
+                        </div>
+                        <div className="text-sm text-gray-500">{application.recruiter?.email}</div>
+                        {application.message && (
+                          <p className="text-sm text-gray-600 mt-1 italic">"{application.message}"</p>
+                        )}
+                        <div className="text-xs text-gray-400 mt-1">
+                          Applied {new Date(application.created_at).toLocaleDateString()}
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <button
+                          onClick={() => approveApplication(application)}
+                          disabled={saving}
+                          className="px-3 py-1.5 bg-green-100 text-green-700 rounded-lg text-sm hover:bg-green-200"
+                        >
+                          Approve
+                        </button>
+                        <button
+                          onClick={() => rejectApplication(application)}
+                          disabled={saving}
+                          className="px-3 py-1.5 bg-red-100 text-red-700 rounded-lg text-sm hover:bg-red-200"
+                        >
+                          Reject
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
 
             <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
               <div className="p-4 border-b border-gray-100 flex items-center justify-between">
@@ -1284,7 +1429,7 @@ export default function AdminPage() {
                   />
                 </div>
                 
-                <div>
+                <div className="col-span-2 flex items-center gap-6">
                   <label className="flex items-center gap-2 cursor-pointer">
                     <input
                       type="checkbox"
@@ -1293,6 +1438,15 @@ export default function AdminPage() {
                       className="w-4 h-4 rounded border-gray-300 text-brand-accent focus:ring-brand-accent"
                     />
                     <span className="text-sm text-gray-700">Public Agency (visible to all)</span>
+                  </label>
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={agencyForm.is_accepting_members}
+                      onChange={(e) => setAgencyForm({ ...agencyForm, is_accepting_members: e.target.checked })}
+                      className="w-4 h-4 rounded border-gray-300 text-brand-accent focus:ring-brand-accent"
+                    />
+                    <span className="text-sm text-gray-700">Accepting New Members</span>
                   </label>
                 </div>
               </div>

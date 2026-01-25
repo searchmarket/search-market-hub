@@ -108,7 +108,7 @@ export async function POST(request: NextRequest) {
     }
 
     if (action === 'create_agency') {
-      const { name, slug, description, owner_id, is_public, website, email, phone, tagline } = body
+      const { name, slug, description, owner_id, is_public, is_accepting_members, website, email, phone, tagline } = body
 
       const { data, error } = await supabaseAdmin
         .from('agencies')
@@ -118,6 +118,7 @@ export async function POST(request: NextRequest) {
           description: description || null,
           owner_id,
           is_public: is_public || false,
+          is_accepting_members: is_accepting_members || false,
           website: website || null,
           email: email || null,
           phone: phone || null,

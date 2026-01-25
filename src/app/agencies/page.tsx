@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase'
-import { ArrowLeft, Building, Search, Users, Globe, Lock, Plus } from 'lucide-react'
+import { ArrowLeft, Building, Search, Users, Globe, Lock, Plus, UserPlus, Check, Loader2 } from 'lucide-react'
 
 interface Agency {
   id: string
@@ -13,6 +13,7 @@ interface Agency {
   logo_url: string | null
   tagline: string | null
   is_public: boolean
+  is_accepting_members: boolean
   primary_color: string
   member_count?: number
 }
@@ -21,18 +22,49 @@ export default function AgenciesPage() {
   const [agencies, setAgencies] = useState<Agency[]>([])
   const [loading, setLoading] = useState(true)
   const [searchQuery, setSearchQuery] = useState('')
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null)
+  const [userMemberships, setUserMemberships] = useState<string[]>([]) // agency IDs user is member of
+  const [userApplications, setUserApplications] = useState<string[]>([]) // agency IDs user has applied to
+  const [applyingTo, setApplyingTo] = useState<string | null>(null)
   const supabase = createClient()
 
   useEffect(() => {
-    fetchAgencies()
+    fetchData()
   }, [])
 
-  async function fetchAgencies() {
+  async function fetchData() {
+    // Get current user
+    const { data: { user } } = await supabase.auth.getUser()
+    if (user) {
+      setCurrentUserId(user.id)
+      
+      // Fetch user's memberships
+      const { data: memberships } = await supabase
+        .from('agency_members')
+        .select('agency_id')
+        .eq('recruiter_id', user.id)
+      
+      if (memberships) {
+        setUserMemberships(memberships.map(m => m.agency_id))
+      }
+
+      // Fetch user's pending applications
+      const { data: applications } = await supabase
+        .from('agency_applications')
+        .select('agency_id')
+        .eq('recruiter_id', user.id)
+        .eq('status', 'pending')
+      
+      if (applications) {
+        setUserApplications(applications.map(a => a.agency_id))
+      }
+    }
+
     // Fetch all agencies with member count
     const { data, error } = await supabase
       .from('agencies')
       .select(`
-        id, name, slug, description, logo_url, tagline, is_public, primary_color,
+        id, name, slug, description, logo_url, tagline, is_public, is_accepting_members, primary_color,
         agency_members(count)
       `)
       .eq('status', 'active')
@@ -41,11 +73,41 @@ export default function AgenciesPage() {
     if (!error && data) {
       const agenciesWithCount = data.map(agency => ({
         ...agency,
+        is_accepting_members: agency.is_accepting_members || false,
         member_count: agency.agency_members?.[0]?.count || 0
       }))
       setAgencies(agenciesWithCount)
     }
     setLoading(false)
+  }
+
+  async function applyToAgency(agencyId: string, e: React.MouseEvent) {
+    e.preventDefault() // Prevent navigating to agency page
+    e.stopPropagation()
+    
+    if (!currentUserId) return
+    
+    setApplyingTo(agencyId)
+    
+    const { error } = await supabase
+      .from('agency_applications')
+      .insert({
+        agency_id: agencyId,
+        recruiter_id: currentUserId,
+        status: 'pending'
+      })
+
+    if (error) {
+      if (error.code === '23505') {
+        alert('You have already applied to this agency')
+      } else {
+        alert('Error submitting application: ' + error.message)
+      }
+    } else {
+      setUserApplications([...userApplications, agencyId])
+    }
+    
+    setApplyingTo(null)
   }
 
   const filteredAgencies = agencies.filter(a => 
@@ -107,7 +169,7 @@ export default function AgenciesPage() {
         </div>
 
         {/* Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
           <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4">
             <div className="text-3xl font-bold text-gray-900">{agencies.length}</div>
             <div className="text-sm text-gray-500">Total Agencies</div>
@@ -117,6 +179,12 @@ export default function AgenciesPage() {
               {agencies.reduce((sum, a) => sum + (a.member_count || 0), 0)}
             </div>
             <div className="text-sm text-gray-500">Total Members</div>
+          </div>
+          <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4">
+            <div className="text-3xl font-bold text-green-600">
+              {agencies.filter(a => a.is_accepting_members).length}
+            </div>
+            <div className="text-sm text-gray-500">Accepting Members</div>
           </div>
           <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4">
             <div className="text-3xl font-bold text-brand-green">Free</div>
@@ -190,9 +258,42 @@ export default function AgenciesPage() {
                     <p className="text-sm text-gray-600 mb-4 line-clamp-2">{agency.description}</p>
                   )}
                   
-                  <div className="flex items-center gap-1 text-sm text-gray-400">
-                    <Users className="w-4 h-4" />
-                    {agency.member_count} {agency.member_count === 1 ? 'member' : 'members'}
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-1 text-sm text-gray-400">
+                      <Users className="w-4 h-4" />
+                      {agency.member_count} {agency.member_count === 1 ? 'member' : 'members'}
+                    </div>
+                    
+                    {/* Join Button */}
+                    {currentUserId && !userMemberships.includes(agency.id) && (
+                      agency.is_accepting_members ? (
+                        userApplications.includes(agency.id) ? (
+                          <span className="flex items-center gap-1 text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded-full">
+                            <Check className="w-3 h-3" />
+                            Applied
+                          </span>
+                        ) : (
+                          <button
+                            onClick={(e) => applyToAgency(agency.id, e)}
+                            disabled={applyingTo === agency.id}
+                            className="flex items-center gap-1 text-xs text-brand-accent bg-blue-50 px-2 py-1 rounded-full hover:bg-blue-100 transition-colors"
+                          >
+                            {applyingTo === agency.id ? (
+                              <Loader2 className="w-3 h-3 animate-spin" />
+                            ) : (
+                              <UserPlus className="w-3 h-3" />
+                            )}
+                            Request to Join
+                          </button>
+                        )
+                      ) : null
+                    )}
+                    {currentUserId && userMemberships.includes(agency.id) && (
+                      <span className="flex items-center gap-1 text-xs text-green-600 bg-green-50 px-2 py-1 rounded-full">
+                        <Check className="w-3 h-3" />
+                        Member
+                      </span>
+                    )}
                   </div>
                 </div>
               </Link>
