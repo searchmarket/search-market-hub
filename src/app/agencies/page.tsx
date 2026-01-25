@@ -192,7 +192,7 @@ export default function AgenciesPage() {
           </div>
         </div>
 
-        {/* Agencies Grid */}
+        {/* Agencies List */}
         {loading ? (
           <div className="text-center py-12 text-gray-500">Loading...</div>
         ) : filteredAgencies.length === 0 ? (
@@ -206,37 +206,52 @@ export default function AgenciesPage() {
             </Link>
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {filteredAgencies.map((agency) => (
-              <Link
-                key={agency.id}
-                href={`/agencies/${agency.slug}`}
-                className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-md hover:border-gray-200 transition-all group"
-              >
-                {/* Agency Header */}
-                <div 
-                  className="h-20 flex items-center justify-center"
-                  style={{ backgroundColor: agency.primary_color || '#1B2B4B' }}
+          <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+            <div className="divide-y divide-gray-100">
+              {filteredAgencies.map((agency) => (
+                <Link
+                  key={agency.id}
+                  href={`/agencies/${agency.slug}`}
+                  className="flex items-center gap-4 px-6 py-4 hover:bg-gray-50 transition-colors group"
                 >
-                  {agency.logo_url ? (
-                    <img 
-                      src={agency.logo_url} 
-                      alt={agency.name} 
-                      className="h-12 w-auto object-contain"
-                    />
-                  ) : (
-                    <span className="text-white text-2xl font-bold">
-                      {agency.name.substring(0, 2).toUpperCase()}
-                    </span>
-                  )}
-                </div>
-                
-                {/* Agency Info */}
-                <div className="p-5">
-                  <div className="flex items-start justify-between mb-2">
-                    <h3 className="font-semibold text-gray-900 group-hover:text-brand-accent transition-colors">
+                  {/* Logo/Avatar */}
+                  <div 
+                    className="w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0"
+                    style={{ backgroundColor: agency.primary_color || '#1B2B4B' }}
+                  >
+                    {agency.logo_url ? (
+                      <img 
+                        src={agency.logo_url} 
+                        alt={agency.name} 
+                        className="w-8 h-8 object-contain"
+                      />
+                    ) : (
+                      <span className="text-white text-sm font-bold">
+                        {agency.name.substring(0, 2).toUpperCase()}
+                      </span>
+                    )}
+                  </div>
+
+                  {/* Name */}
+                  <div className="w-48 flex-shrink-0">
+                    <h3 className="font-medium text-gray-900 group-hover:text-brand-accent transition-colors truncate">
                       {agency.name}
                     </h3>
+                    {agency.tagline && (
+                      <p className="text-xs text-gray-500 truncate">{agency.tagline}</p>
+                    )}
+                  </div>
+
+                  {/* Members */}
+                  <div className="w-24 flex-shrink-0 hidden md:block">
+                    <div className="flex items-center gap-1 text-sm text-gray-500">
+                      <Users className="w-4 h-4" />
+                      {agency.member_count}
+                    </div>
+                  </div>
+
+                  {/* Badges */}
+                  <div className="flex-1 hidden lg:flex items-center gap-2">
                     {agency.is_public ? (
                       <span className="flex items-center gap-1 text-xs text-green-600 bg-green-50 px-2 py-0.5 rounded-full">
                         <Globe className="w-3 h-3" />
@@ -248,56 +263,48 @@ export default function AgenciesPage() {
                         Private
                       </span>
                     )}
-                  </div>
-                  
-                  {agency.tagline && (
-                    <p className="text-sm text-gray-500 mb-3 line-clamp-1">{agency.tagline}</p>
-                  )}
-                  
-                  {agency.description && (
-                    <p className="text-sm text-gray-600 mb-4 line-clamp-2">{agency.description}</p>
-                  )}
-                  
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-1 text-sm text-gray-400">
-                      <Users className="w-4 h-4" />
-                      {agency.member_count} {agency.member_count === 1 ? 'member' : 'members'}
-                    </div>
-                    
-                    {/* Join Button */}
-                    {currentUserId && !userMemberships.includes(agency.id) && (
-                      agency.is_accepting_members ? (
-                        userApplications.includes(agency.id) ? (
-                          <span className="flex items-center gap-1 text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded-full">
-                            <Check className="w-3 h-3" />
-                            Applied
-                          </span>
-                        ) : (
-                          <button
-                            onClick={(e) => applyToAgency(agency.id, e)}
-                            disabled={applyingTo === agency.id}
-                            className="flex items-center gap-1 text-xs text-brand-accent bg-blue-50 px-2 py-1 rounded-full hover:bg-blue-100 transition-colors"
-                          >
-                            {applyingTo === agency.id ? (
-                              <Loader2 className="w-3 h-3 animate-spin" />
-                            ) : (
-                              <UserPlus className="w-3 h-3" />
-                            )}
-                            Request to Join
-                          </button>
-                        )
-                      ) : null
-                    )}
-                    {currentUserId && userMemberships.includes(agency.id) && (
-                      <span className="flex items-center gap-1 text-xs text-green-600 bg-green-50 px-2 py-1 rounded-full">
-                        <Check className="w-3 h-3" />
-                        Member
+                    {agency.is_accepting_members ? (
+                      <span className="flex items-center gap-1 text-xs text-blue-600 bg-blue-50 px-2 py-0.5 rounded-full">
+                        <UserPlus className="w-3 h-3" />
+                        Accepting
+                      </span>
+                    ) : (
+                      <span className="flex items-center gap-1 text-xs text-gray-500 bg-gray-100 px-2 py-0.5 rounded-full">
+                        Not Accepting
                       </span>
                     )}
                   </div>
-                </div>
-              </Link>
-            ))}
+
+                  {/* Action/Status */}
+                  <div className="flex-shrink-0">
+                    {currentUserId && userMemberships.includes(agency.id) ? (
+                      <span className="flex items-center gap-1 text-xs text-green-600 bg-green-50 px-2.5 py-1 rounded-full">
+                        <Check className="w-3 h-3" />
+                        Member
+                      </span>
+                    ) : currentUserId && userApplications.includes(agency.id) ? (
+                      <span className="flex items-center gap-1 text-xs text-gray-500 bg-gray-100 px-2.5 py-1 rounded-full">
+                        <Check className="w-3 h-3" />
+                        Applied
+                      </span>
+                    ) : agency.is_accepting_members ? (
+                      <button
+                        onClick={(e) => applyToAgency(agency.id, e)}
+                        disabled={applyingTo === agency.id}
+                        className="flex items-center gap-1 text-xs text-brand-accent bg-blue-50 px-2.5 py-1 rounded-full hover:bg-blue-100 transition-colors"
+                      >
+                        {applyingTo === agency.id ? (
+                          <Loader2 className="w-3 h-3 animate-spin" />
+                        ) : (
+                          <UserPlus className="w-3 h-3" />
+                        )}
+                        Join
+                      </button>
+                    ) : null}
+                  </div>
+                </Link>
+              ))}
+            </div>
           </div>
         )}
       </main>
