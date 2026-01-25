@@ -161,19 +161,18 @@ export default function RecruitersPage() {
                       Specializations
                     </div>
                     <div className="flex flex-wrap gap-1">
-                      {recruiter.specializations.slice(0, 3).map((spec) => (
+                      {recruiter.specializations.slice(0, 3).map((spec, index) => (
                         <span 
                           key={spec}
-                          className="px-2 py-0.5 bg-teal-50 text-teal-700 text-xs rounded-full"
+                          className={`px-2 py-0.5 text-xs rounded-full ${
+                            index === 0 
+                              ? 'bg-teal-100 text-teal-800 font-medium' 
+                              : 'bg-teal-50 text-teal-700'
+                          }`}
                         >
                           {spec}
                         </span>
                       ))}
-                      {recruiter.specializations.length > 3 && (
-                        <span className="px-2 py-0.5 bg-gray-100 text-gray-500 text-xs rounded-full">
-                          +{recruiter.specializations.length - 3} more
-                        </span>
-                      )}
                     </div>
                   </div>
                 )}
