@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase'
-import { ArrowLeft, Users, Search, Mail, Briefcase } from 'lucide-react'
+import { ArrowLeft, Users, Search } from 'lucide-react'
 
 interface Recruiter {
   id: string
@@ -107,7 +107,7 @@ export default function RecruitersPage() {
           </div>
         </div>
 
-        {/* Recruiters Grid */}
+        {/* Recruiters List */}
         {loading ? (
           <div className="text-center py-12 text-gray-500">Loading...</div>
         ) : filteredRecruiters.length === 0 ? (
@@ -115,15 +115,16 @@ export default function RecruitersPage() {
             {searchQuery ? `No recruiters found matching "${searchQuery}"` : 'No recruiters found'}
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {filteredRecruiters.map((recruiter) => (
-              <Link
-                key={recruiter.id}
-                href={`/recruiters/${recruiter.id}`}
-                className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 hover:shadow-md hover:border-gray-200 transition-all group"
-              >
-                <div className="flex items-start gap-4">
-                  <div className="w-14 h-14 bg-gradient-to-br from-teal-400 to-teal-600 rounded-full flex items-center justify-center text-white text-xl font-bold flex-shrink-0">
+          <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+            <div className="divide-y divide-gray-100">
+              {filteredRecruiters.map((recruiter) => (
+                <Link
+                  key={recruiter.id}
+                  href={`/recruiters/${recruiter.id}`}
+                  className="flex items-center gap-4 px-6 py-4 hover:bg-gray-50 transition-colors group"
+                >
+                  {/* Avatar */}
+                  <div className="w-10 h-10 bg-gradient-to-br from-teal-400 to-teal-600 rounded-full flex items-center justify-center text-white font-bold flex-shrink-0">
                     {recruiter.avatar_url ? (
                       <img 
                         src={recruiter.avatar_url} 
@@ -134,34 +135,25 @@ export default function RecruitersPage() {
                       recruiter.full_name?.charAt(0) || recruiter.email.charAt(0).toUpperCase()
                     )}
                   </div>
-                  <div className="flex-1 min-w-0">
+
+                  {/* Name */}
+                  <div className="w-48 flex-shrink-0">
                     <div className="flex items-center gap-2">
-                      <h3 className="font-semibold text-gray-900 group-hover:text-brand-accent transition-colors truncate">
+                      <h3 className="font-medium text-gray-900 group-hover:text-brand-accent transition-colors truncate">
                         {recruiter.full_name || recruiter.email.split('@')[0]}
                       </h3>
-                      <span className={`px-2 py-0.5 text-xs rounded-full font-medium flex-shrink-0 ${
-                        recruiter.is_available 
-                          ? 'bg-green-100 text-green-700' 
-                          : 'bg-gray-100 text-gray-500'
-                      }`}>
-                        {recruiter.is_available ? 'Available' : 'Unavailable'}
-                      </span>
-                    </div>
-                    <div className="flex items-center gap-1 text-sm text-gray-500 mt-1">
-                      <Mail className="w-3 h-3" />
-                      <span className="truncate">{recruiter.email}</span>
                     </div>
                   </div>
-                </div>
 
-                {recruiter.specializations && recruiter.specializations.length > 0 && (
-                  <div className="mt-4 pt-4 border-t border-gray-100">
-                    <div className="flex items-center gap-1 text-xs text-gray-500 mb-2">
-                      <Briefcase className="w-3 h-3" />
-                      Specializations
-                    </div>
-                    <div className="flex flex-wrap gap-1">
-                      {recruiter.specializations.slice(0, 3).map((spec, index) => (
+                  {/* Email */}
+                  <div className="w-64 flex-shrink-0 hidden md:block">
+                    <span className="text-sm text-gray-500 truncate block">{recruiter.email}</span>
+                  </div>
+
+                  {/* Specializations */}
+                  <div className="flex-1 hidden lg:flex items-center gap-2">
+                    {recruiter.specializations && recruiter.specializations.length > 0 ? (
+                      recruiter.specializations.slice(0, 3).map((spec, index) => (
                         <span 
                           key={spec}
                           className={`px-2 py-0.5 text-xs rounded-full ${
@@ -172,16 +164,25 @@ export default function RecruitersPage() {
                         >
                           {spec}
                         </span>
-                      ))}
-                    </div>
+                      ))
+                    ) : (
+                      <span className="text-sm text-gray-400">No specializations</span>
+                    )}
                   </div>
-                )}
 
-                {recruiter.bio && (
-                  <p className="mt-3 text-sm text-gray-500 line-clamp-2">{recruiter.bio}</p>
-                )}
-              </Link>
-            ))}
+                  {/* Status */}
+                  <div className="flex-shrink-0">
+                    <span className={`px-2.5 py-1 text-xs rounded-full font-medium ${
+                      recruiter.is_available 
+                        ? 'bg-green-100 text-green-700' 
+                        : 'bg-gray-100 text-gray-500'
+                    }`}>
+                      {recruiter.is_available ? 'Available' : 'Unavailable'}
+                    </span>
+                  </div>
+                </Link>
+              ))}
+            </div>
           </div>
         )}
       </main>
