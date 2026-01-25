@@ -1,6 +1,13 @@
 import { createServerClient, type CookieOptions } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
 
+const cookieConfig = {
+  domain: '.search.market',
+  path: '/',
+  sameSite: 'lax' as const,
+  secure: true
+}
+
 export async function middleware(request: NextRequest) {
   let response = NextResponse.next({
     request: {
@@ -21,6 +28,7 @@ export async function middleware(request: NextRequest) {
             name,
             value,
             ...options,
+            ...cookieConfig,
           })
           response = NextResponse.next({
             request: {
@@ -31,6 +39,7 @@ export async function middleware(request: NextRequest) {
             name,
             value,
             ...options,
+            ...cookieConfig,
           })
         },
         remove(name: string, options: CookieOptions) {
@@ -38,6 +47,7 @@ export async function middleware(request: NextRequest) {
             name,
             value: '',
             ...options,
+            ...cookieConfig,
           })
           response = NextResponse.next({
             request: {
@@ -48,6 +58,7 @@ export async function middleware(request: NextRequest) {
             name,
             value: '',
             ...options,
+            ...cookieConfig,
           })
         },
       },
