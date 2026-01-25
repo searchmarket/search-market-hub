@@ -59,6 +59,20 @@ interface Application {
   } | null
 }
 
+interface RecruiterStats {
+  ytd_revenue: number
+  mtd_revenue: number
+  last_month_revenue: number
+  lifetime_revenue: number
+  ytd_placements: number
+  mtd_placements: number
+  lifetime_placements: number
+  avg_time_to_fill: number
+  avg_time_to_fill_ytd: number
+  active_jobs: number
+  active_candidates: number
+}
+
 interface Team {
   id: string
   name: string
@@ -77,6 +91,8 @@ export default function ManageAgencyPage() {
   const [teams, setTeams] = useState<Team[]>([])
   const [applications, setApplications] = useState<Application[]>([])
   const [selectedApplication, setSelectedApplication] = useState<Application | null>(null)
+  const [selectedRecruiterStats, setSelectedRecruiterStats] = useState<RecruiterStats | null>(null)
+  const [loadingStats, setLoadingStats] = useState(false)
   const [loading, setLoading] = useState(true)
   const [activeTab, setActiveTab] = useState<'members' | 'applications' | 'teams' | 'settings'>('members')
   const [processingApplication, setProcessingApplication] = useState(false)
@@ -223,6 +239,33 @@ export default function ManageAgencyPage() {
     }
   }
 
+  async function selectApplication(application: Application) {
+    setSelectedApplication(application)
+    setSelectedRecruiterStats(null)
+    setLoadingStats(true)
+
+    // Fetch recruiter stats
+    const { data: stats } = await supabase
+      .from('recruiter_stats')
+      .select('*')
+      .eq('recruiter_id', application.recruiter_id)
+      .single()
+
+    if (stats) {
+      setSelectedRecruiterStats(stats as RecruiterStats)
+    }
+    setLoadingStats(false)
+  }
+
+  function formatCurrency(amount: number): string {
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: 'USD',
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0
+    }).format(amount)
+  }
+
   async function handleAcceptApplication(application: Application) {
     if (!agency) return
     setProcessingApplication(true)
@@ -250,6 +293,7 @@ export default function ManageAgencyPage() {
       .eq('id', application.id)
 
     setSelectedApplication(null)
+    setSelectedRecruiterStats(null)
     setProcessingApplication(false)
     fetchAgency(params.slug as string)
   }
@@ -264,6 +308,7 @@ export default function ManageAgencyPage() {
       .eq('id', application.id)
 
     setSelectedApplication(null)
+    setSelectedRecruiterStats(null)
     setProcessingApplication(false)
     fetchAgency(params.slug as string)
   }
@@ -615,7 +660,7 @@ export default function ManageAgencyPage() {
               <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
                 <div className="p-6 border-b border-gray-100 flex items-center justify-between">
                   <button
-                    onClick={() => setSelectedApplication(null)}
+                    onClick={() => { setSelectedApplication(null); setSelectedRecruiterStats(null); }}
                     className="flex items-center gap-2 text-gray-600 hover:text-gray-900"
                   >
                     <ArrowLeft className="w-4 h-4" />
@@ -709,6 +754,53 @@ export default function ManageAgencyPage() {
                     </div>
                   )}
                   
+                  {/* Recruiter Stats */}
+                  <div className="mt-6">
+                    <h3 className="text-sm font-semibold text-gray-700 mb-3 flex items-center gap-2">
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                      </svg>
+                      Performance Stats
+                    </h3>
+                    {loadingStats ? (
+                      <div className="flex items-center gap-2 text-gray-500">
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                        Loading stats...
+                      </div>
+                    ) : selectedRecruiterStats ? (
+                      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                        <div className="bg-green-50 rounded-lg p-4 border border-green-100">
+                          <div className="text-2xl font-bold text-green-700">
+                            {formatCurrency(selectedRecruiterStats.ytd_revenue)}
+                          </div>
+                          <div className="text-sm text-green-600">YTD Revenue</div>
+                        </div>
+                        <div className="bg-blue-50 rounded-lg p-4 border border-blue-100">
+                          <div className="text-2xl font-bold text-blue-700">
+                            {formatCurrency(selectedRecruiterStats.mtd_revenue)}
+                          </div>
+                          <div className="text-sm text-blue-600">MTD Revenue</div>
+                        </div>
+                        <div className="bg-purple-50 rounded-lg p-4 border border-purple-100">
+                          <div className="text-2xl font-bold text-purple-700">
+                            {selectedRecruiterStats.ytd_placements}
+                          </div>
+                          <div className="text-sm text-purple-600">YTD Placements</div>
+                        </div>
+                        <div className="bg-orange-50 rounded-lg p-4 border border-orange-100">
+                          <div className="text-2xl font-bold text-orange-700">
+                            {selectedRecruiterStats.avg_time_to_fill.toFixed(1)} days
+                          </div>
+                          <div className="text-sm text-orange-600">Avg Time to Fill</div>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="bg-gray-50 rounded-lg p-4 border border-gray-200">
+                        <p className="text-gray-500 text-sm">No performance data available yet</p>
+                      </div>
+                    )}
+                  </div>
+                  
                   {/* Bio */}
                   {selectedApplication.recruiter?.bio && (
                     <div className="mt-6">
@@ -760,7 +852,7 @@ export default function ManageAgencyPage() {
                     {applications.map((application) => (
                       <div
                         key={application.id}
-                        onClick={() => setSelectedApplication(application)}
+                        onClick={() => selectApplication(application)}
                         className="flex items-center gap-4 px-6 py-4 hover:bg-gray-50 cursor-pointer transition-colors"
                       >
                         <div className="w-12 h-12 bg-gradient-to-br from-teal-400 to-teal-600 rounded-full flex items-center justify-center text-white font-bold flex-shrink-0">
