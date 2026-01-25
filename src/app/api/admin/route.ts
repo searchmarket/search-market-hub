@@ -81,11 +81,21 @@ export async function POST(request: NextRequest) {
     }
 
     if (action === 'update_recruiter') {
-      const { recruiter_id, ...updates } = body
+      const { recruiter_id, full_name, phone, city, state_province, country, bio, linkedin_url, is_admin, is_available } = body
       
       const { error } = await supabaseAdmin
         .from('recruiters')
-        .update(updates)
+        .update({
+          full_name,
+          phone,
+          city,
+          state_province,
+          country,
+          bio,
+          linkedin_url,
+          is_admin,
+          is_available
+        })
         .eq('id', recruiter_id)
 
       if (error) {
