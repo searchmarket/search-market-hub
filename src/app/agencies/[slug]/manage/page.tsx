@@ -6,7 +6,7 @@ import Link from 'next/link'
 import { createClient } from '@/lib/supabase'
 import { 
   ArrowLeft, Building, Users, Settings, UserPlus, Trash2, Check, X,
-  Plus, Loader2, Globe, Lock, Mail
+  Plus, Loader2, Globe, Lock, Mail, Clock, MapPin, Briefcase, ExternalLink
 } from 'lucide-react'
 
 interface Agency {
@@ -39,6 +39,26 @@ interface Member {
   }
 }
 
+interface Application {
+  id: string
+  agency_id: string
+  recruiter_id: string
+  status: string
+  message: string | null
+  created_at: string
+  recruiter: {
+    id: string
+    full_name: string | null
+    email: string
+    city: string | null
+    state_province: string | null
+    country: string | null
+    specializations: string[] | null
+    bio: string | null
+    is_available: boolean
+  } | null
+}
+
 interface Team {
   id: string
   name: string
@@ -55,8 +75,11 @@ export default function ManageAgencyPage() {
   const [members, setMembers] = useState<Member[]>([])
   const [pendingMembers, setPendingMembers] = useState<Member[]>([])
   const [teams, setTeams] = useState<Team[]>([])
+  const [applications, setApplications] = useState<Application[]>([])
+  const [selectedApplication, setSelectedApplication] = useState<Application | null>(null)
   const [loading, setLoading] = useState(true)
-  const [activeTab, setActiveTab] = useState<'members' | 'teams' | 'settings'>('members')
+  const [activeTab, setActiveTab] = useState<'members' | 'applications' | 'teams' | 'settings'>('members')
+  const [processingApplication, setProcessingApplication] = useState(false)
   
   // Invite modal
   const [showInviteModal, setShowInviteModal] = useState(false)
@@ -160,6 +183,21 @@ export default function ManageAgencyPage() {
       setTeams(teamsData)
     }
 
+    // Fetch pending applications
+    const { data: applicationsData } = await supabase
+      .from('agency_applications')
+      .select(`
+        id, agency_id, recruiter_id, status, message, created_at,
+        recruiter:recruiters(id, full_name, email, city, state_province, country, specializations, bio, is_available)
+      `)
+      .eq('agency_id', agencyData.id)
+      .eq('status', 'pending')
+      .order('created_at', { ascending: false })
+
+    if (applicationsData) {
+      setApplications(applicationsData as unknown as Application[])
+    }
+
     setLoading(false)
   }
 
@@ -183,6 +221,51 @@ export default function ManageAgencyPage() {
     if (!error) {
       fetchAgency(params.slug as string)
     }
+  }
+
+  async function handleAcceptApplication(application: Application) {
+    if (!agency) return
+    setProcessingApplication(true)
+
+    // Add as member
+    const { error: memberError } = await supabase
+      .from('agency_members')
+      .insert({
+        agency_id: agency.id,
+        recruiter_id: application.recruiter_id,
+        role: 'member',
+        status: 'active'
+      })
+
+    if (memberError) {
+      alert('Error adding member: ' + memberError.message)
+      setProcessingApplication(false)
+      return
+    }
+
+    // Update application status
+    await supabase
+      .from('agency_applications')
+      .update({ status: 'approved' })
+      .eq('id', application.id)
+
+    setSelectedApplication(null)
+    setProcessingApplication(false)
+    fetchAgency(params.slug as string)
+  }
+
+  async function handleDeclineApplication(application: Application) {
+    if (!confirm('Are you sure you want to decline this application?')) return
+    setProcessingApplication(true)
+
+    await supabase
+      .from('agency_applications')
+      .update({ status: 'rejected' })
+      .eq('id', application.id)
+
+    setSelectedApplication(null)
+    setProcessingApplication(false)
+    fetchAgency(params.slug as string)
   }
 
   async function handleRemoveMember(memberId: string) {
@@ -372,6 +455,22 @@ export default function ManageAgencyPage() {
               Members ({members.length})
             </button>
             <button
+              onClick={() => setActiveTab('applications')}
+              className={`py-4 border-b-2 font-medium text-sm ${
+                activeTab === 'applications' 
+                  ? 'border-brand-accent text-brand-accent' 
+                  : 'border-transparent text-gray-500 hover:text-gray-700'
+              }`}
+            >
+              <UserPlus className="w-4 h-4 inline mr-2" />
+              Applications
+              {applications.length > 0 && (
+                <span className="ml-2 bg-orange-500 text-white text-xs px-2 py-0.5 rounded-full">
+                  {applications.length}
+                </span>
+              )}
+            </button>
+            <button
               onClick={() => setActiveTab('teams')}
               className={`py-4 border-b-2 font-medium text-sm ${
                 activeTab === 'teams' 
@@ -505,6 +604,206 @@ export default function ManageAgencyPage() {
                 </div>
               )}
             </div>
+          </div>
+        )}
+
+        {/* Applications Tab */}
+        {activeTab === 'applications' && (
+          <div className="space-y-6">
+            {/* Selected Application Detail */}
+            {selectedApplication ? (
+              <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+                <div className="p-6 border-b border-gray-100 flex items-center justify-between">
+                  <button
+                    onClick={() => setSelectedApplication(null)}
+                    className="flex items-center gap-2 text-gray-600 hover:text-gray-900"
+                  >
+                    <ArrowLeft className="w-4 h-4" />
+                    Back to Applications
+                  </button>
+                  <div className="flex items-center gap-3">
+                    <button
+                      onClick={() => handleDeclineApplication(selectedApplication)}
+                      disabled={processingApplication}
+                      className="flex items-center gap-2 px-4 py-2 border border-red-200 text-red-600 rounded-lg hover:bg-red-50 disabled:opacity-50"
+                    >
+                      <X className="w-4 h-4" />
+                      Decline
+                    </button>
+                    <button
+                      onClick={() => handleAcceptApplication(selectedApplication)}
+                      disabled={processingApplication}
+                      className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50"
+                    >
+                      {processingApplication ? (
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                      ) : (
+                        <Check className="w-4 h-4" />
+                      )}
+                      Accept
+                    </button>
+                  </div>
+                </div>
+                
+                <div className="p-6">
+                  {/* Recruiter Profile */}
+                  <div className="flex items-start gap-6">
+                    <div className="w-20 h-20 bg-gradient-to-br from-teal-400 to-teal-600 rounded-xl flex items-center justify-center text-white text-2xl font-bold flex-shrink-0">
+                      {selectedApplication.recruiter?.full_name?.charAt(0) || selectedApplication.recruiter?.email.charAt(0).toUpperCase()}
+                    </div>
+                    <div className="flex-1">
+                      <h2 className="text-2xl font-bold text-gray-900">
+                        {selectedApplication.recruiter?.full_name || selectedApplication.recruiter?.email.split('@')[0]}
+                      </h2>
+                      <p className="text-gray-500">{selectedApplication.recruiter?.email}</p>
+                      
+                      {(selectedApplication.recruiter?.city || selectedApplication.recruiter?.state_province) && (
+                        <div className="flex items-center gap-1 text-gray-600 mt-2">
+                          <MapPin className="w-4 h-4" />
+                          {[selectedApplication.recruiter.city, selectedApplication.recruiter.state_province, selectedApplication.recruiter.country]
+                            .filter(Boolean)
+                            .join(', ')}
+                        </div>
+                      )}
+                      
+                      <div className="flex items-center gap-2 mt-3">
+                        <span className={`px-2.5 py-1 text-xs rounded-full font-medium ${
+                          selectedApplication.recruiter?.is_available 
+                            ? 'bg-green-100 text-green-700' 
+                            : 'bg-gray-100 text-gray-500'
+                        }`}>
+                          {selectedApplication.recruiter?.is_available ? 'Available' : 'Unavailable'}
+                        </span>
+                        <Link 
+                          href={`/recruiters/${selectedApplication.recruiter?.id}`}
+                          target="_blank"
+                          className="flex items-center gap-1 text-xs text-brand-accent hover:underline"
+                        >
+                          View Full Profile <ExternalLink className="w-3 h-3" />
+                        </Link>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  {/* Specializations */}
+                  {selectedApplication.recruiter?.specializations && selectedApplication.recruiter.specializations.length > 0 && (
+                    <div className="mt-6">
+                      <h3 className="text-sm font-semibold text-gray-700 mb-3 flex items-center gap-2">
+                        <Briefcase className="w-4 h-4" />
+                        Specializations
+                      </h3>
+                      <div className="flex flex-wrap gap-2">
+                        {selectedApplication.recruiter.specializations.map((spec, index) => (
+                          <span 
+                            key={spec}
+                            className={`px-3 py-1 text-sm rounded-full ${
+                              index === 0 
+                                ? 'bg-teal-100 text-teal-800 font-medium' 
+                                : 'bg-teal-50 text-teal-700'
+                            }`}
+                          >
+                            {spec}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                  
+                  {/* Bio */}
+                  {selectedApplication.recruiter?.bio && (
+                    <div className="mt-6">
+                      <h3 className="text-sm font-semibold text-gray-700 mb-3">Bio</h3>
+                      <p className="text-gray-600 whitespace-pre-wrap">{selectedApplication.recruiter.bio}</p>
+                    </div>
+                  )}
+                  
+                  {/* Application Message */}
+                  {selectedApplication.message && (
+                    <div className="mt-6 p-4 bg-blue-50 rounded-lg border border-blue-100">
+                      <h3 className="text-sm font-semibold text-blue-800 mb-2">Application Message</h3>
+                      <p className="text-blue-700">{selectedApplication.message}</p>
+                    </div>
+                  )}
+                  
+                  {/* Application Date */}
+                  <div className="mt-6 text-sm text-gray-500 flex items-center gap-1">
+                    <Clock className="w-4 h-4" />
+                    Applied {new Date(selectedApplication.created_at).toLocaleDateString('en-US', { 
+                      year: 'numeric', 
+                      month: 'long', 
+                      day: 'numeric' 
+                    })}
+                  </div>
+                </div>
+              </div>
+            ) : (
+              /* Applications List */
+              <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+                <div className="p-6 border-b border-gray-100">
+                  <h2 className="text-lg font-semibold text-gray-900">Pending Applications</h2>
+                  <p className="text-sm text-gray-500">Review recruiters who want to join your agency</p>
+                </div>
+                
+                {applications.length === 0 ? (
+                  <div className="p-12 text-center">
+                    <UserPlus className="w-12 h-12 text-gray-300 mx-auto mb-4" />
+                    <p className="text-gray-500">No pending applications</p>
+                    {!agency?.is_accepting_members && (
+                      <p className="text-sm text-orange-600 mt-2">
+                        Your agency is not currently accepting new members. 
+                        Enable this in Settings to receive applications.
+                      </p>
+                    )}
+                  </div>
+                ) : (
+                  <div className="divide-y divide-gray-100">
+                    {applications.map((application) => (
+                      <div
+                        key={application.id}
+                        onClick={() => setSelectedApplication(application)}
+                        className="flex items-center gap-4 px-6 py-4 hover:bg-gray-50 cursor-pointer transition-colors"
+                      >
+                        <div className="w-12 h-12 bg-gradient-to-br from-teal-400 to-teal-600 rounded-full flex items-center justify-center text-white font-bold flex-shrink-0">
+                          {application.recruiter?.full_name?.charAt(0) || application.recruiter?.email.charAt(0).toUpperCase()}
+                        </div>
+                        
+                        <div className="flex-1 min-w-0">
+                          <h3 className="font-medium text-gray-900">
+                            {application.recruiter?.full_name || application.recruiter?.email.split('@')[0]}
+                          </h3>
+                          <p className="text-sm text-gray-500 truncate">{application.recruiter?.email}</p>
+                        </div>
+                        
+                        {(application.recruiter?.city || application.recruiter?.state_province) && (
+                          <div className="hidden md:flex items-center gap-1 text-sm text-gray-500">
+                            <MapPin className="w-4 h-4" />
+                            {application.recruiter.city}{application.recruiter.state_province && `, ${application.recruiter.state_province}`}
+                          </div>
+                        )}
+                        
+                        {application.recruiter?.specializations && application.recruiter.specializations.length > 0 && (
+                          <div className="hidden lg:flex items-center gap-2">
+                            {application.recruiter.specializations.slice(0, 2).map((spec, idx) => (
+                              <span key={spec} className={`px-2 py-0.5 text-xs rounded-full ${
+                                idx === 0 ? 'bg-teal-100 text-teal-800' : 'bg-teal-50 text-teal-700'
+                              }`}>
+                                {spec}
+                              </span>
+                            ))}
+                          </div>
+                        )}
+                        
+                        <div className="text-sm text-gray-400">
+                          {new Date(application.created_at).toLocaleDateString()}
+                        </div>
+                        
+                        <ExternalLink className="w-4 h-4 text-gray-400" />
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
           </div>
         )}
 
