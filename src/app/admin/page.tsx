@@ -25,7 +25,7 @@ interface Recruiter {
   phone: string | null
   is_admin: boolean
   is_available: boolean
-  created_at: string
+  joined_at: string
   city: string | null
   state_province: string | null
   country: string | null
@@ -152,7 +152,7 @@ export default function AdminPage() {
     const { data } = await supabase
       .from('recruiters')
       .select('*')
-      .order('created_at', { ascending: false })
+      .order('joined_at', { ascending: false })
 
     if (data) setRecruiters(data)
   }
