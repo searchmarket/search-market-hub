@@ -190,20 +190,24 @@ export default function HubPage() {
                   )}
                 </div>
               )}
-              <Link 
+              <a 
                 href="https://ats.search.market"
+                target="_blank"
+                rel="noopener noreferrer"
                 className="flex items-center gap-2 px-4 py-2 bg-brand-green rounded-lg hover:bg-green-600 transition-colors"
               >
                 <Briefcase className="w-4 h-4" />
                 Open ATS
-              </Link>
-              <Link 
+              </a>
+              <a 
                 href="https://ats.search.market/dashboard/settings"
+                target="_blank"
+                rel="noopener noreferrer"
                 className="flex items-center gap-2 px-4 py-2 bg-white/10 rounded-lg hover:bg-white/20 transition-colors"
               >
                 <Settings className="w-4 h-4" />
                 <span className="hidden md:inline">Settings</span>
-              </Link>
+              </a>
               {user ? (
                 <button
                   onClick={handleLogout}
