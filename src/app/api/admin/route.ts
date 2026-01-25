@@ -21,9 +21,49 @@ export async function POST(request: NextRequest) {
     if (action === 'create_recruiter') {
       const { email, full_name, phone, city, state_province, country, is_admin, specializations } = body
 
+      // Check if recruiter already exists
+      const { data: existingRecruiter } = await supabaseAdmin
+        .from('recruiters')
+        .select('id, email')
+        .eq('email', email.toLowerCase())
+        .single()
+
+      if (existingRecruiter) {
+        return NextResponse.json({ error: 'A recruiter with this email already exists' }, { status: 400 })
+      }
+
+      // Check if auth user already exists
+      const { data: existingUsers } = await supabaseAdmin.auth.admin.listUsers()
+      const existingAuthUser = existingUsers?.users?.find(u => u.email?.toLowerCase() === email.toLowerCase())
+      
+      if (existingAuthUser) {
+        // Auth user exists but no recruiter profile - create the profile
+        const { error: profileError } = await supabaseAdmin
+          .from('recruiters')
+          .insert({
+            id: existingAuthUser.id,
+            email: email.toLowerCase(),
+            full_name: full_name || null,
+            phone: phone || null,
+            city: city || null,
+            state_province: state_province || null,
+            country: country || null,
+            is_admin: is_admin || false,
+            is_available: true,
+            force_password_change: true,
+            specializations: specializations && specializations.length > 0 ? specializations : null
+          })
+
+        if (profileError) {
+          return NextResponse.json({ error: profileError.message }, { status: 400 })
+        }
+
+        return NextResponse.json({ success: true, user: existingAuthUser, note: 'Profile created for existing auth user' })
+      }
+
       // Create auth user with default password
       const { data: authData, error: authError } = await supabaseAdmin.auth.admin.createUser({
-        email,
+        email: email.toLowerCase(),
         password: 'h3ll0Th3r3',
         email_confirm: true
       })
@@ -37,7 +77,7 @@ export async function POST(request: NextRequest) {
         .from('recruiters')
         .insert({
           id: authData.user.id,
-          email,
+          email: email.toLowerCase(),
           full_name: full_name || null,
           phone: phone || null,
           city: city || null,
