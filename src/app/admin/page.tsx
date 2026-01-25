@@ -15,7 +15,8 @@ import {
   X,
   Edit,
   Eye,
-  EyeOff
+  EyeOff,
+  Key
 } from 'lucide-react'
 
 interface Recruiter {
@@ -143,6 +144,11 @@ export default function AdminPage() {
   const [showRecruiterModal, setShowRecruiterModal] = useState(false)
   const [showAgencyModal, setShowAgencyModal] = useState(false)
   const [editingRecruiter, setEditingRecruiter] = useState<Recruiter | null>(null)
+  const [showPasswordModal, setShowPasswordModal] = useState(false)
+  const [passwordRecruiter, setPasswordRecruiter] = useState<Recruiter | null>(null)
+  const [newPassword, setNewPassword] = useState('')
+  const [confirmPassword, setConfirmPassword] = useState('')
+  const [showPassword, setShowPassword] = useState(false)
   
   // Form states
   const [recruiterForm, setRecruiterForm] = useState({
@@ -325,6 +331,54 @@ export default function AdminPage() {
       alert('Error: ' + result.error)
     } else {
       fetchRecruiters()
+    }
+    
+    setSaving(false)
+  }
+
+  function openPasswordReset(recruiter: Recruiter) {
+    setPasswordRecruiter(recruiter)
+    setNewPassword('')
+    setConfirmPassword('')
+    setShowPassword(false)
+    setShowPasswordModal(true)
+  }
+
+  async function handleResetPassword() {
+    if (!passwordRecruiter) return
+    
+    if (!newPassword || newPassword.length < 8) {
+      alert('Password must be at least 8 characters')
+      return
+    }
+    
+    if (newPassword !== confirmPassword) {
+      alert('Passwords do not match')
+      return
+    }
+    
+    setSaving(true)
+    
+    const res = await fetch('/api/admin', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        action: 'reset_password',
+        recruiter_id: passwordRecruiter.id,
+        new_password: newPassword
+      })
+    })
+    
+    const result = await res.json()
+    
+    if (result.error) {
+      alert('Error: ' + result.error)
+    } else {
+      alert('Password reset successfully!')
+      setShowPasswordModal(false)
+      setPasswordRecruiter(null)
+      setNewPassword('')
+      setConfirmPassword('')
     }
     
     setSaving(false)
@@ -797,6 +851,13 @@ export default function AdminPage() {
                           title="Edit"
                         >
                           <Edit className="w-4 h-4" />
+                        </button>
+                        <button
+                          onClick={() => openPasswordReset(recruiter)}
+                          className="p-2 text-orange-500 hover:bg-orange-50 rounded-lg"
+                          title="Reset Password"
+                        >
+                          <Key className="w-4 h-4" />
                         </button>
                         <button
                           onClick={() => handleDeleteRecruiter(recruiter)}
@@ -1466,6 +1527,84 @@ export default function AdminPage() {
               >
                 {saving && <Loader2 className="w-4 h-4 animate-spin" />}
                 Create Agency
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Password Reset Modal */}
+      {showPasswordModal && passwordRecruiter && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-xl shadow-xl w-full max-w-md mx-4">
+            <div className="p-6 border-b border-gray-100 flex items-center justify-between">
+              <div>
+                <h2 className="text-xl font-semibold text-gray-900">Reset Password</h2>
+                <p className="text-sm text-gray-500">{passwordRecruiter.email}</p>
+              </div>
+              <button
+                onClick={() => { setShowPasswordModal(false); setPasswordRecruiter(null); }}
+                className="p-2 hover:bg-gray-100 rounded-lg"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            
+            <div className="p-6 space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">New Password</label>
+                <div className="relative">
+                  <input
+                    type={showPassword ? 'text' : 'password'}
+                    value={newPassword}
+                    onChange={(e) => setNewPassword(e.target.value)}
+                    className="w-full px-4 py-2 pr-10 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-accent"
+                    placeholder="Enter new password"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                  >
+                    {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                  </button>
+                </div>
+                <p className="text-xs text-gray-400 mt-1">Must be at least 8 characters</p>
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Confirm Password</label>
+                <input
+                  type="password"
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-accent"
+                  placeholder="Confirm new password"
+                />
+              </div>
+              
+              <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3">
+                <p className="text-sm text-yellow-800">
+                  <strong>Note:</strong> The user will be required to change their password on next login.
+                </p>
+              </div>
+            </div>
+            
+            <div className="p-6 border-t border-gray-100 flex justify-end gap-3">
+              <button
+                onClick={() => { setShowPasswordModal(false); setPasswordRecruiter(null); }}
+                className="px-4 py-2 text-gray-600 hover:text-gray-800"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleResetPassword}
+                disabled={saving || !newPassword || !confirmPassword}
+                className="flex items-center gap-2 px-6 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 disabled:opacity-50"
+              >
+                {saving && <Loader2 className="w-4 h-4 animate-spin" />}
+                <Key className="w-4 h-4" />
+                Reset Password
               </button>
             </div>
           </div>

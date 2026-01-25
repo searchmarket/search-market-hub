@@ -121,6 +121,31 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ success: true })
     }
 
+    if (action === 'reset_password') {
+      const { recruiter_id, new_password } = body
+
+      if (!new_password || new_password.length < 8) {
+        return NextResponse.json({ error: 'Password must be at least 8 characters' }, { status: 400 })
+      }
+
+      const { error } = await supabaseAdmin.auth.admin.updateUserById(
+        recruiter_id,
+        { password: new_password }
+      )
+
+      if (error) {
+        return NextResponse.json({ error: error.message }, { status: 400 })
+      }
+
+      // Optionally set force_password_change flag
+      await supabaseAdmin
+        .from('recruiters')
+        .update({ force_password_change: true })
+        .eq('id', recruiter_id)
+
+      return NextResponse.json({ success: true })
+    }
+
     if (action === 'update_recruiter') {
       const { recruiter_id, full_name, phone, city, state_province, country, bio, linkedin_url, is_admin, is_available, specializations } = body
       
