@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase'
-import { ArrowLeft, Users, Search, MapPin } from 'lucide-react'
+import { ArrowLeft, Users, Search, MapPin, Linkedin } from 'lucide-react'
 
 const STATE_ABBREVIATIONS: Record<string, string> = {
   // US States
@@ -35,6 +35,7 @@ interface Recruiter {
   city: string | null
   state_province: string | null
   country: string | null
+  linkedin_url: string | null
 }
 
 type CountryFilter = 'all' | 'us' | 'canada'
@@ -53,7 +54,7 @@ export default function RecruitersPage() {
   async function fetchRecruiters() {
     const { data, error } = await supabase
       .from('recruiters')
-      .select('id, full_name, email, specializations, bio, avatar_url, is_available, city, state_province, country')
+      .select('id, full_name, email, specializations, bio, avatar_url, is_available, city, state_province, country, linkedin_url')
       .order('full_name')
 
     if (!error && data) {
@@ -239,6 +240,26 @@ export default function RecruitersPage() {
                   {/* Email */}
                   <div className="w-56 flex-shrink-0 hidden lg:block">
                     <span className="text-sm text-gray-500 truncate block">{recruiter.email}</span>
+                  </div>
+
+                  {/* LinkedIn */}
+                  <div className="w-10 flex-shrink-0 hidden lg:flex justify-center">
+                    {recruiter.linkedin_url ? (
+                      <a
+                        href={recruiter.linkedin_url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        onClick={(e) => e.stopPropagation()}
+                        className="p-1.5 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded transition-colors"
+                        title="View LinkedIn Profile"
+                      >
+                        <Linkedin className="w-4 h-4" />
+                      </a>
+                    ) : (
+                      <span className="text-gray-300">
+                        <Linkedin className="w-4 h-4" />
+                      </span>
+                    )}
                   </div>
 
                   {/* Specializations */}
