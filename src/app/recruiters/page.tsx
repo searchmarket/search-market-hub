@@ -243,20 +243,24 @@ export default function RecruitersPage() {
                   </div>
 
                   {/* LinkedIn */}
-                  <div className="w-10 flex-shrink-0 hidden lg:flex justify-center">
+                  <div className="w-10 flex-shrink-0 flex justify-center">
                     {recruiter.linkedin_url ? (
                       <a
                         href={recruiter.linkedin_url}
                         target="_blank"
                         rel="noopener noreferrer"
-                        onClick={(e) => e.stopPropagation()}
-                        className="p-1.5 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded transition-colors"
+                        onClick={(e) => {
+                          e.preventDefault()
+                          e.stopPropagation()
+                          window.open(recruiter.linkedin_url!, '_blank')
+                        }}
+                        className="p-1.5 text-blue-600 hover:text-blue-700 hover:bg-blue-50 rounded transition-colors"
                         title="View LinkedIn Profile"
                       >
                         <Linkedin className="w-4 h-4" />
                       </a>
                     ) : (
-                      <span className="text-gray-300">
+                      <span className="p-1.5 text-gray-300">
                         <Linkedin className="w-4 h-4" />
                       </span>
                     )}
