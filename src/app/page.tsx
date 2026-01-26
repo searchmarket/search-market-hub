@@ -18,7 +18,10 @@ import {
   MapPin,
   ExternalLink,
   Shield,
-  Settings
+  Settings,
+  Lightbulb,
+  Gift,
+  Plug
 } from 'lucide-react'
 
 interface BlogPost {
@@ -154,6 +157,31 @@ export default function HubPage() {
       href: '/policies',
       icon: FileText,
       color: 'bg-green-500',
+      external: false
+    },
+    // Row 4
+    {
+      title: 'Feature Request',
+      description: 'Submit ideas and vote on new features',
+      href: '/feature-requests',
+      icon: Lightbulb,
+      color: 'bg-amber-500',
+      external: false
+    },
+    {
+      title: 'Swag',
+      description: 'Order branded merchandise and company gear',
+      href: '/swag',
+      icon: Gift,
+      color: 'bg-pink-500',
+      external: false
+    },
+    {
+      title: 'External Services',
+      description: 'Third-party tools, integrations, and partner services',
+      href: '/external-services',
+      icon: Plug,
+      color: 'bg-gray-600',
       external: false
     }
   ]
