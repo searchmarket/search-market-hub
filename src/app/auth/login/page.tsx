@@ -85,13 +85,6 @@ function LoginForm() {
           {loading ? 'Signing in...' : 'Sign In'}
         </button>
       </form>
-
-      <div className="mt-6 text-center text-sm text-gray-600">
-        Don't have an account?{' '}
-        <Link href="/auth/signup" className="text-brand-accent hover:underline">
-          Sign up
-        </Link>
-      </div>
     </div>
   )
 }
