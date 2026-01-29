@@ -35,6 +35,7 @@ interface BlogPost {
 export default function HubPage() {
   const [latestBlog, setLatestBlog] = useState<BlogPost | null>(null)
   const [user, setUser] = useState<any>(null)
+  const [userName, setUserName] = useState<string | null>(null)
   const [userCity, setUserCity] = useState<string | null>(null)
   const [isAdmin, setIsAdmin] = useState(false)
   const supabase = createClient()
@@ -49,13 +50,16 @@ export default function HubPage() {
     setUser(user)
     
     if (user) {
-      // Fetch recruiter profile to get city and admin status
+      // Fetch recruiter profile to get name, city and admin status
       const { data: recruiter } = await supabase
         .from('recruiters')
-        .select('city, is_admin')
+        .select('full_name, city, is_admin')
         .eq('id', user.id)
         .single()
       
+      if (recruiter?.full_name) {
+        setUserName(recruiter.full_name)
+      }
       if (recruiter?.city) {
         setUserCity(recruiter.city)
       }
@@ -204,6 +208,11 @@ export default function HubPage() {
             <div className="flex items-center gap-4">
               {user && (
                 <div className="hidden md:block text-right">
+                  {userName && (
+                    <span className="text-white font-medium block">
+                      {userName}
+                    </span>
+                  )}
                   <span className="text-white/70 text-sm block">
                     {user.email}
                   </span>
