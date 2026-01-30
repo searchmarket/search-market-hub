@@ -73,6 +73,7 @@ export async function POST(request: NextRequest) {
       }
 
       // Create auth user with default password
+      // NOTE: A trigger (handle_new_user) will auto-create a recruiter record
       const { data: authData, error: authError } = await supabaseAdmin.auth.admin.createUser({
         email: email.toLowerCase(),
         password: 'h3ll0Th3r3',
@@ -88,12 +89,10 @@ export async function POST(request: NextRequest) {
         ? full_name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')
         : email.toLowerCase().split('@')[0].replace(/[^a-z0-9]+/g, '-')
 
-      // Create recruiter profile
+      // Update the recruiter profile created by the trigger
       const { error: profileError } = await supabaseAdmin
         .from('recruiters')
-        .insert({
-          id: authData.user.id,
-          email: email.toLowerCase(),
+        .update({
           full_name: full_name || null,
           phone: phone || null,
           city: city || null,
@@ -105,6 +104,7 @@ export async function POST(request: NextRequest) {
           specializations: specializations && specializations.length > 0 ? specializations : null,
           slug: baseSlug
         })
+        .eq('id', authData.user.id)
 
       if (profileError) {
         // Rollback: delete auth user if profile creation fails
