@@ -42,18 +42,7 @@ export async function POST(request: NextRequest) {
       const existingAuthUser = existingUsers?.users?.find(u => u.email?.toLowerCase() === email.toLowerCase())
       
       if (existingAuthUser) {
-        // Check if recruiter profile already exists for this auth user
-        const { data: existingProfile } = await supabaseAdmin
-          .from('recruiters')
-          .select('id')
-          .eq('id', existingAuthUser.id)
-          .maybeSingle()
-        
-        if (existingProfile) {
-          return NextResponse.json({ error: 'A recruiter profile already exists for this user' }, { status: 400 })
-        }
-        
-        // Auth user exists but no recruiter profile - create the profile
+        // Auth user exists - upsert the recruiter profile
         // Generate slug from full_name or email
         const baseSlug = full_name 
           ? full_name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')
@@ -61,7 +50,7 @@ export async function POST(request: NextRequest) {
         
         const { error: profileError } = await supabaseAdmin
           .from('recruiters')
-          .insert({
+          .upsert({
             id: existingAuthUser.id,
             email: email.toLowerCase(),
             full_name: full_name || null,
@@ -74,13 +63,13 @@ export async function POST(request: NextRequest) {
             force_password_change: true,
             specializations: specializations && specializations.length > 0 ? specializations : null,
             slug: baseSlug
-          })
+          }, { onConflict: 'id' })
 
         if (profileError) {
           return NextResponse.json({ error: profileError.message }, { status: 400 })
         }
 
-        return NextResponse.json({ success: true, user: existingAuthUser, note: 'Profile created for existing auth user' })
+        return NextResponse.json({ success: true, user: existingAuthUser, note: 'Profile created/updated for existing auth user' })
       }
 
       // Create auth user with default password
