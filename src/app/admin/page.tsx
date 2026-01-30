@@ -1192,8 +1192,11 @@ export default function AdminPage() {
                     onChange={(e) => setRecruiterForm({ ...recruiterForm, email: e.target.value })}
                     disabled={!!editingRecruiter}
                     className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-accent disabled:bg-gray-100"
-                    placeholder="recruiter@example.com"
+                    placeholder="firstname.lastname@search.market"
                   />
+                  {!editingRecruiter && (
+                    <p className="text-xs text-gray-500 mt-1">Must be a @search.market email address</p>
+                  )}
                 </div>
                 
                 <div>

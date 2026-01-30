@@ -21,6 +21,11 @@ export async function POST(request: NextRequest) {
     if (action === 'create_recruiter') {
       const { email, full_name, phone, city, state_province, country, is_admin, specializations } = body
 
+      // Validate email is @search.market
+      if (!email.toLowerCase().endsWith('@search.market')) {
+        return NextResponse.json({ error: 'Email must be a @search.market address (e.g., firstname.lastname@search.market)' }, { status: 400 })
+      }
+
       // Check if recruiter already exists
       const { data: existingRecruiter } = await supabaseAdmin
         .from('recruiters')
