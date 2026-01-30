@@ -164,7 +164,7 @@ export async function POST(request: NextRequest) {
     }
 
     if (action === 'update_recruiter') {
-      const { recruiter_id, full_name, phone, city, state_province, country, bio, linkedin_url, is_admin, is_available, specializations } = body
+      const { recruiter_id, email, full_name, phone, city, state_province, country, bio, linkedin_url, is_admin, is_available, specializations } = body
       
       // Check if recruiter has a slug, if not generate one
       const { data: existingRecruiter } = await supabaseAdmin
@@ -176,13 +176,26 @@ export async function POST(request: NextRequest) {
       let slug = existingRecruiter?.slug
       if (!slug && full_name) {
         slug = full_name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')
-      } else if (!slug && existingRecruiter?.email) {
-        slug = existingRecruiter.email.toLowerCase().split('@')[0].replace(/[^a-z0-9]+/g, '-')
+      } else if (!slug && email) {
+        slug = email.toLowerCase().split('@')[0].replace(/[^a-z0-9]+/g, '-')
+      }
+      
+      // If email is being changed, update auth user too
+      if (email && email.toLowerCase() !== existingRecruiter?.email?.toLowerCase()) {
+        const { error: authError } = await supabaseAdmin.auth.admin.updateUserById(
+          recruiter_id,
+          { email: email.toLowerCase() }
+        )
+        
+        if (authError) {
+          return NextResponse.json({ error: 'Failed to update auth email: ' + authError.message }, { status: 400 })
+        }
       }
       
       const { error } = await supabaseAdmin
         .from('recruiters')
         .update({
+          email: email ? email.toLowerCase() : existingRecruiter?.email,
           full_name,
           phone,
           city,

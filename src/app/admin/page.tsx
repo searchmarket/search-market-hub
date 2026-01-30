@@ -274,6 +274,12 @@ export default function AdminPage() {
   async function handleUpdateRecruiter() {
     if (!editingRecruiter) return
     
+    // Validate email is @search.market
+    if (!recruiterForm.email.toLowerCase().endsWith('@search.market')) {
+      alert('Email must be a @search.market address')
+      return
+    }
+    
     setSaving(true)
     
     const res = await fetch('/api/admin', {
@@ -282,6 +288,7 @@ export default function AdminPage() {
       body: JSON.stringify({
         action: 'update_recruiter',
         recruiter_id: editingRecruiter.id,
+        email: recruiterForm.email.toLowerCase(),
         full_name: recruiterForm.full_name || null,
         phone: recruiterForm.phone || null,
         city: recruiterForm.city || null,
@@ -1190,13 +1197,10 @@ export default function AdminPage() {
                     type="email"
                     value={recruiterForm.email}
                     onChange={(e) => setRecruiterForm({ ...recruiterForm, email: e.target.value })}
-                    disabled={!!editingRecruiter}
-                    className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-accent disabled:bg-gray-100"
+                    className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-accent"
                     placeholder="firstname.lastname@search.market"
                   />
-                  {!editingRecruiter && (
-                    <p className="text-xs text-gray-500 mt-1">Must be a @search.market email address</p>
-                  )}
+                  <p className="text-xs text-gray-500 mt-1">Must be a @search.market email address</p>
                 </div>
                 
                 <div>
