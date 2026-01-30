@@ -38,6 +38,11 @@ export async function POST(request: NextRequest) {
       
       if (existingAuthUser) {
         // Auth user exists but no recruiter profile - create the profile
+        // Generate slug from full_name or email
+        const baseSlug = full_name 
+          ? full_name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')
+          : email.toLowerCase().split('@')[0].replace(/[^a-z0-9]+/g, '-')
+        
         const { error: profileError } = await supabaseAdmin
           .from('recruiters')
           .insert({
@@ -51,7 +56,8 @@ export async function POST(request: NextRequest) {
             is_admin: is_admin || false,
             is_available: true,
             force_password_change: true,
-            specializations: specializations && specializations.length > 0 ? specializations : null
+            specializations: specializations && specializations.length > 0 ? specializations : null,
+            slug: baseSlug
           })
 
         if (profileError) {
@@ -72,6 +78,11 @@ export async function POST(request: NextRequest) {
         return NextResponse.json({ error: authError.message }, { status: 400 })
       }
 
+      // Generate slug from full_name or email
+      const baseSlug = full_name 
+        ? full_name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')
+        : email.toLowerCase().split('@')[0].replace(/[^a-z0-9]+/g, '-')
+
       // Create recruiter profile
       const { error: profileError } = await supabaseAdmin
         .from('recruiters')
@@ -86,7 +97,8 @@ export async function POST(request: NextRequest) {
           is_admin: is_admin || false,
           is_available: true,
           force_password_change: true,
-          specializations: specializations && specializations.length > 0 ? specializations : null
+          specializations: specializations && specializations.length > 0 ? specializations : null,
+          slug: baseSlug
         })
 
       if (profileError) {
@@ -149,6 +161,20 @@ export async function POST(request: NextRequest) {
     if (action === 'update_recruiter') {
       const { recruiter_id, full_name, phone, city, state_province, country, bio, linkedin_url, is_admin, is_available, specializations } = body
       
+      // Check if recruiter has a slug, if not generate one
+      const { data: existingRecruiter } = await supabaseAdmin
+        .from('recruiters')
+        .select('slug, email')
+        .eq('id', recruiter_id)
+        .single()
+      
+      let slug = existingRecruiter?.slug
+      if (!slug && full_name) {
+        slug = full_name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')
+      } else if (!slug && existingRecruiter?.email) {
+        slug = existingRecruiter.email.toLowerCase().split('@')[0].replace(/[^a-z0-9]+/g, '-')
+      }
+      
       const { error } = await supabaseAdmin
         .from('recruiters')
         .update({
@@ -161,7 +187,8 @@ export async function POST(request: NextRequest) {
           linkedin_url,
           is_admin,
           is_available,
-          specializations
+          specializations,
+          slug
         })
         .eq('id', recruiter_id)
 
