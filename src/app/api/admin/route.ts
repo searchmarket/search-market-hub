@@ -26,12 +26,12 @@ export async function POST(request: NextRequest) {
         return NextResponse.json({ error: 'Email must be a @search.market address (e.g., firstname.lastname@search.market)' }, { status: 400 })
       }
 
-      // Check if recruiter already exists
+      // Check if recruiter already exists (use maybeSingle to avoid errors)
       const { data: existingRecruiter } = await supabaseAdmin
         .from('recruiters')
         .select('id, email')
-        .eq('email', email.toLowerCase())
-        .single()
+        .ilike('email', email)
+        .maybeSingle()
 
       if (existingRecruiter) {
         return NextResponse.json({ error: 'A recruiter with this email already exists' }, { status: 400 })
@@ -42,6 +42,17 @@ export async function POST(request: NextRequest) {
       const existingAuthUser = existingUsers?.users?.find(u => u.email?.toLowerCase() === email.toLowerCase())
       
       if (existingAuthUser) {
+        // Check if recruiter profile already exists for this auth user
+        const { data: existingProfile } = await supabaseAdmin
+          .from('recruiters')
+          .select('id')
+          .eq('id', existingAuthUser.id)
+          .maybeSingle()
+        
+        if (existingProfile) {
+          return NextResponse.json({ error: 'A recruiter profile already exists for this user' }, { status: 400 })
+        }
+        
         // Auth user exists but no recruiter profile - create the profile
         // Generate slug from full_name or email
         const baseSlug = full_name 
